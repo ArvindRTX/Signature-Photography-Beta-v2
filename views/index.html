@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Signature Photography - Professional photography services with private client galleries. View and select your favorite photos with ease.">
+    <meta name="keywords"
+        content="photography, professional photographer, photo gallery, client portal, signature photography">
+    <meta name="author" content="Aravinth Ramesh">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Signature Photography - Client Gallery Portal">
+    <meta property="og:description"
+        content="Access your private photo gallery and select your favorite images for editing and final delivery.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://signaturephotography.com">
+    <meta property="og:site_name" content="Signature Photography">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Signature Photography - Client Gallery Portal">
+    <meta name="twitter:description"
+        content="Access your private photo gallery and select your favorite images for editing and final delivery.">
+    <link rel="canonical" href="https://signaturephotography.com">
+    <title>Signature Photography - Client Gallery Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-container">
+            <div class="brand-logo">
+                <a href="/">Signature Photography</a>
+            </div>
+            <nav class="main-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                            <i class="fas fa-moon"></i>
+                            <i class="fas fa-sun"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a href="#">Contact Us <i class="fas fa-chevron-down" style="font-size: 0.8em;"></i></a>
+                        <ul class="dropdown-content">
+                            <li><a href="https://wa.me/918438650107" target="_blank" rel="noopener"><i
+                                        class="fab fa-whatsapp"></i>
+                                    WhatsApp</a></li>
+                            <li><a href="https://instagram.com/aravinth_ramesh_photography" target="_blank"
+                                    rel="noopener"><i class="fab fa-instagram"></i> Instagram</a></li>
+                            <li><a href="mailto:aravinthramesh@example.com"><i class="fas fa-envelope"></i> Email</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-button">Admin Login</a>
+                    </li>
+                </ul>
+                <button class="mobile-menu-toggle" aria-label="Toggle mobile menu"><i class="fas fa-bars"></i></button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div id="client-login-view" class="container">
+            <div class="login-page-wrapper">
+                <div class="login-brand-panel">
+                    <h1>Your Private Gallery</h1>
+                    <p>Welcome! Please log in to view and select your beautifully captured moments.</p>
+                </div>
+                <div class="login-form-panel">
+                    <div class="login-card">
+                        <h2>Client Access</h2>
+                        <form id="client-login-form">
+                            <div id="login-message-area"></div>
+                            <div class="form-group">
+                                <label for="client-username">Username</label>
+                                <input type="text" id="client-username" required autocomplete="username">
+                            </div>
+                                <div class="form-group">
+                                <label for="client-password">Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="client-password" required
+                                        autocomplete="current-password">
+                                    <button type="button" class="password-toggle"
+                                        aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" class="submit-btn">
+                                Login
+                                <span class="spinner"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="gallery-container" class="container" style="display: none;">
+            <div id="page-title-header">
+                <h1 id="page-main-title">Your Gallery</h1>
+                <p id="header-subtitle">Select your favorite photos for editing.</p>
+            </div>
+
+            <div id="photo-gallery" class="gallery-grid">
+            </div>
+
+            <div id="loading-sentinel" style="text-align: center; padding: 20px;">
+                <div class="loader"></div>
+            </div>
+
+            <button id="sticky-submit-btn" class="sticky-submit-btn">
+                <i class="fas fa-check"></i>
+                Submit <span id="selection-count-btn" class="count">0</span> Selections
+            </button>
+        </div>
+    </main>
+
+    <div id="lightbox-overlay" class="lightbox-overlay">
+        <div class="lightbox-content-wrapper">
+            <button id="lightbox-close" class="lightbox-btn" aria-label="Close lightbox">&times;</button>
+            <button id="lightbox-prev" class="lightbox-btn" aria-label="Previous image"><i
+                    class="fas fa-chevron-left"></i></button>
+            <img id="lightbox-img" src="" alt="Selected Photo">
+            <button id="lightbox-next" class="lightbox-btn" aria-label="Next image"><i
+                    class="fas fa-chevron-right"></i></button>
+            <div id="lightbox-selection-checkbox" class="selection-checkbox"></div>
+        </div>
+    </div>
+
+    <div id="submission-modal" class="modal-overlay">
+        <div class="modal-content submission-section">
+            <button id="close-modal-btn" class="modal-close-btn">&times;</button>
+            <h2 style="text-align: center; margin-bottom: 10px;">Submit Your Selections</h2>
+            <p style="text-align: center; margin-bottom: 30px;">You have selected <span
+                    id="selection-count-modal">0</span> photos.</p>
+
+            <form id="selection-form">
+                <div class="form-group">
+                    <label for="client-name">Your Name</label>
+                    <input type="text" id="client-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="client-email">Your Email</label>
+                    <input type="email" id="client-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="client-phone">Your Phone Number (WhatsApp preferred)</label>
+                    <input type="tel" id="client-phone" required>
+                </div>
+                <button type="submit" class="submit-btn">
+                    Confirm Selections
+                    <span class="spinner"></span>
+                </button>
+            </form>
+            <div id="success-message">
+                <h3>🎉 Success!</h3>
+                <p>Your photo selections have been submitted successfully. We'll be in touch shortly!</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-socials">
+                <a href="https://wa.me/918438650107" target="_blank" rel="noopener" aria-label="WhatsApp">
+                    <i class="fab fa-whatsapp"></i></a>
+                <a href="https://www.instagram.com/signature.photograph?utm_source=ig_web_button_share_sheet&igsh=ZHNoMmtpbGtwenEw"
+                    target="_blank" rel="noopener" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i></a>
+                <a href="mailto:aravinthramesh627@gmail.com" aria-label="Email">
+                    <i class="fas fa-envelope"></i></a>
+            </div>
+            <p>This website was created and managed by Aravinth Ramesh © 2025</p>
+        </div>
+    </footer>
+
+    <!-- Toasts -->
+    <div id="toast-container" class="sp-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const body = document.body;
+
+            const applyTheme = (theme) => {
+                if (theme === 'dark') {
+                    body.classList.add('dark-mode');
+                } else {
+                    body.classList.remove('dark-mode');
+                }
+            };
+
+            themeToggleBtn.addEventListener('click', () => {
+                const newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(savedTheme);
+        });
+    </script>
+
+
+    <script src="/js/script.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Admin Dashboard - Signature Photography management portal for galleries, clients, and submissions.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Dashboard - Signature Photography</title>
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- ========= LOGIN VIEW ========= -->
+    <div id="login-view">
+        <div class="login-container">
+            <h1><i class="fas fa-crown"></i> Admin Portal</h1>
+            <p class="login-subtitle">Sign in to manage galleries and clients.</p>
+            <form id="login-form" autocomplete="off">
+                <div class="input-wrapper">
+                    <input type="text" id="username" autocomplete="off" required placeholder="Username">
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+                <div class="input-wrapper">
+                    <input type="password" id="password" autocomplete="new-password" required placeholder="Password">
+                    <i class="fas fa-lock input-icon"></i>
+                    <button type="button" class="password-toggle" aria-label="Toggle password visibility"><i
+                            class="fas fa-eye"></i></button>
+                </div>
+                <button type="submit" class="btn btn-primary login-btn">
+                    <span class="btn-text">Sign In</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========= DASHBOARD VIEW ========= -->
+    <div id="dashboard-content">
+
+        <!-- ===== HEADER ===== -->
+        <header class="dashboard-header">
+            <div class="header-search"></div>
+            <div class="header-user-info">
+                <button id="sidebar-toggle" class="btn btn-small" aria-label="Toggle sidebar"><i
+                        class="fas fa-bars"></i></button>
+                <button id="admin-theme-toggle" class="btn btn-small" aria-label="Toggle theme"><i
+                        class="fas fa-moon"></i></button>
+                <span id="admin-welcome">Welcome, Admin</span>
+
+                <a href="/" target="_blank" rel="noopener noreferrer" class="btn btn-small btn-secondary">
+                    <i class="fas fa-external-link-alt"></i> Client View
+                </a>
+
+                <button id="header-logout-btn" class="btn btn-small">Logout</button>
+            </div>
+        </header>
+
+        <!-- ===== SIDEBAR ===== -->
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard" class="brand-logo">Signature Photo</a>
+            </div>
+
+            <div class="sidebar-section">
+                <details>
+                    <summary>Create Gallery</summary>
+                    <div class="sidebar-form-container">
+                        <form id="create-gallery-form">
+                            <div class="form-group">
+                                <label for="gallery-name">Gallery Name</label>
+                                <input type="text" id="gallery-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="folder-link">Google Drive Link/ID</label>
+                                <input type="text" id="folder-link" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="client-select">Assign to Client (Optional)</label>
+                                <select id="client-select">
+                                    <option value="">-- No Client --</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="btn-text">Create Gallery</span>
+                            </button>
+                        </form>
+                    </div>
+                </details>
+            </div>
+            <div class="sidebar-section">
+                <details>
+                    <summary>Create Client</summary>
+                    <div class="sidebar-form-container">
+                        <form id="create-client-form">
+                            <div class="form-group">
+                                <label for="client-name">Client Name</label>
+                                <input type="text" id="client-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="client-username">Username</label>
+                                <input type="text" id="client-username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="client-password">Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="client-password" required autocomplete="new-password">
+                                    <button type="button" class="password-toggle"
+                                        aria-label="Toggle password visibility"><i class="fas fa-eye"></i></button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="btn-text">Create Client</span>
+                            </button>
+                        </form>
+                    </div>
+                </details>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="dashboard-main">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-galleries">0</div>
+                    <div class="stat-label">Total Galleries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="unassigned-galleries">0</div>
+                    <div class="stat-label">Unassigned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-clients">0</div>
+                    <div class="stat-label">Clients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-selections">0</div>
+                    <div class="stat-label">Selections</div>
+                </div>
+            </div>
+
+            <!-- Management Section with Tabs -->
+            <div class="management-section">
+                <nav class="tab-nav">
+                    <button class="tab-btn active" data-tab="galleries"><i class="fas fa-images"></i> Galleries</button>
+                    <button class="tab-btn" data-tab="clients"><i class="fas fa-users"></i> Clients</button>
+                    <button class="tab-btn" data-tab="contacts"><i class="fas fa-address-book"></i> Contacts</button>
+                </nav>
+
+                <!-- Galleries Panel -->
+                <div id="galleries-panel" class="tab-panel active">
+                    <div class="section-header">
+                        <div class="search-box">
+                            <input type="text" id="gallery-search" placeholder="Search galleries...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="list-container">
+                        <div class="list-loader" id="gallery-loader">
+                            <div class="spinner"></div>
+                        </div>
+                        <div class="list-items" id="gallery-list"></div>
+                        <div class="pagination-controls" id="gallery-pagination"></div>
+                    </div>
+                </div>
+
+                <!-- Clients Panel -->
+                <div id="clients-panel" class="tab-panel">
+                    <div class="section-header">
+                        <div class="search-box">
+                            <input type="text" id="client-search" placeholder="Search clients...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <button class="btn btn-export btn-small" data-action="export-clients"><i
+                                class="fas fa-file-csv"></i> Export CSV</button>
+                    </div>
+                    <div class="list-container">
+                        <div class="list-loader" id="client-loader">
+                            <div class="spinner"></div>
+                        </div>
+                        <div class="list-items" id="client-list"></div>
+                        <div class="pagination-controls" id="client-pagination"></div>
+                    </div>
+                </div>
+
+                <!-- Contacts Panel -->
+                <div id="contacts-panel" class="tab-panel">
+                    <div class="section-header">
+                        <div class="search-box">
+                            <input type="text" id="contact-search" placeholder="Search contacts...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <button class="btn btn-export btn-small" data-action="export-contacts"><i
+                                class="fas fa-file-csv"></i> Export CSV</button>
+                    </div>
+                    <div class="list-container">
+                        <div class="list-loader" id="contact-loader">
+                            <div class="spinner"></div>
+                        </div>
+                        <div class="list-items" id="contact-list"></div>
+                        <div class="pagination-controls" id="contact-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ========= TOAST & MODALS (Unchanged Structure) ========= -->
+
+    <div class="modal" id="confirm-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirm Deletion</h3><button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-no" class="btn btn-secondary"><span class="btn-text">Cancel</span></button>
+                <button id="confirm-yes" class="btn btn-danger"><span class="btn-text">Yes, Delete</span></button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="edit-client-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Client Credentials</h3><button class="close-btn">&times;</button>
+            </div>
+            <form id="edit-client-form">
+                <div class="modal-body">
+                    <input type="hidden" id="edit-client-id">
+                    <div class="form-group"><label for="edit-client-name">Client Name</label><input type="text"
+                            id="edit-client-name" required></div>
+                    <div class="form-group"><label for="edit-client-username">Username</label><input type="text"
+                            id="edit-client-username" required></div>
+                    <div class="form-group"><label for="edit-client-password">New Password (leave blank to keep)</label>
+                        <div class="password-wrapper"><input type="password" id="edit-client-password"
+                                autocomplete="new-password"><button type="button" class="password-toggle"><i
+                                    class="fas fa-eye"></i></button></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn"><span
+                            class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary"><span class="btn-text">Save Changes</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal" id="assign-gallery-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title" id="assign-gallery-title">Assign Galleries</h3><button
+                    class="close-btn">&times;</button>
+            </div>
+            <form id="assign-gallery-form">
+                <input type="hidden" id="assign-client-id">
+                <div class="modal-body" id="assign-gallery-list" style="max-height: 300px; overflow-y: auto;"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn"><span
+                            class="btn-text">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary"><span class="btn-text">Save
+                            Assignments</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal" id="view-client-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title">Client Details</h3><button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Name:</strong> <span id="view-client-name"></span></p>
+                <p><strong>Username:</strong> <span id="view-client-username"></span></p>
+                <hr>
+                <p><strong>Assigned Galleries:</strong></p>
+                <ul id="view-client-galleries"></ul>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary close-btn"><span
+                        class="btn-text">Close</span></button></div>
+        </div>
+    </div>
+    <div class="modal" id="submission-history-modal">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="submission-history-title">Submission History</h3><button
+                    class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="submission-history-list" style="max-height: 400px; overflow-y: auto;"></div>
+            <div class="modal-footer"><button class="btn btn-secondary close-btn"><span
+                        class="btn-text">Close</span></button></div>
+        </div>
+    </div>
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+    <script src="/js/dashboard.js"></script>
+</body>
+
+</html>
