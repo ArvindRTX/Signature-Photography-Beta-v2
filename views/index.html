@@ -82,7 +82,7 @@
                                 <label for="client-username">Username</label>
                                 <input type="text" id="client-username" required autocomplete="username">
                             </div>
-                                <div class="form-group">
+                            <div class="form-group">
                                 <label for="client-password">Password</label>
                                 <div class="password-wrapper">
                                     <input type="password" id="client-password" required
@@ -113,23 +113,25 @@
             <div id="photo-gallery" class="gallery-grid">
             </div>
 
-            <div id="loading-sentinel" style="text-align: center; padding: 20px;">
+            <div id="loading-sentinel">
                 <div class="loader"></div>
             </div>
-
             <button id="sticky-submit-btn" class="sticky-submit-btn">
                 <i class="fas fa-check"></i>
                 Submit <span id="selection-count-btn" class="count">0</span> Selections
             </button>
         </div>
     </main>
-
     <div id="lightbox-overlay" class="lightbox-overlay">
         <div class="lightbox-content-wrapper">
             <button id="lightbox-close" class="lightbox-btn" aria-label="Close lightbox">&times;</button>
             <button id="lightbox-prev" class="lightbox-btn" aria-label="Previous image"><i
                     class="fas fa-chevron-left"></i></button>
+
             <img id="lightbox-img" src="" alt="Selected Photo">
+
+            <div id="lightbox-loader" class="loader"></div>
+
             <button id="lightbox-next" class="lightbox-btn" aria-label="Next image"><i
                     class="fas fa-chevron-right"></i></button>
             <div id="lightbox-selection-checkbox" class="selection-checkbox"></div>

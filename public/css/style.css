@@ -1089,3 +1089,76 @@ body.lightbox-active .sticky-submit-btn {
     font-size: 1rem;
     padding: 5px;
 }
+/* In public/css/style.css */
+
+.photo-container {
+    position: relative;
+    aspect-ratio: 4/3;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid transparent;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    background-color: var(--photo-container-bg);
+}
+
+.photo-container .bg-image,
+.photo-container .main-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* This transition creates the smooth fade-in */
+    transition: opacity 0.6s ease-in-out, filter 0.4s ease;
+}
+
+.photo-container .bg-image {
+    object-fit: cover;
+    filter: blur(10px) brightness(0.95);
+    transform: scale(1.1);
+    /* Start invisible */
+    opacity: 0;
+}
+
+.photo-container .main-image {
+    object-fit: contain;
+    z-index: 2;
+    /* Start invisible */
+    opacity: 0;
+}
+
+/* This class is added by JS when the image is loaded */
+.photo-container.loaded .main-image,
+.photo-container.loaded .bg-image {
+    /* Become visible */
+    opacity: 1;
+}
+
+.photo-container.loaded .loader {
+    /* Hide the loader spinner */
+    opacity: 0;
+    pointer-events: none;
+}
+/* Add to the end of public/css/style.css */
+
+#lightbox-loader {
+    position: absolute; /* Center it inside the lightbox */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;   /* Make it a bit larger than the thumbnail loaders */
+    height: 60px;
+    border-width: 6px;
+    display: none; /* Hide it by default */
+    z-index: 1004; /* Ensure it's on top of the old image */
+}
+/* In public/css/style.css */
+/* Add this new rule to your stylesheet */
+
+#loading-sentinel {
+    position: relative; /* This is the key fix */
+    height: 100px;      /* Give the container some space for the spinner */
+    text-align: center;
+}
