@@ -569,6 +569,12 @@
       gap: 15px;
   }
 
+  .item-info p {
+      margin: 0;
+      overflow-wrap: break-word;
+      /* Allows long words to break and wrap */
+  }
+
   .item-info p,
   .item-info a {
       margin: 0;
@@ -887,6 +893,7 @@
   }
 
   @media (max-width: 768px) {
+
       .dashboard-main {
           padding: 15px;
       }
@@ -898,5 +905,105 @@
       .section-header {
           flex-direction: column;
           align-items: flex-start;
+      }
+  }
+
+  @media (max-width: 480px) {
+
+      /* Reduce heading sizes on very small screens */
+      #page-title-header h1 {
+          font-size: 2.5rem;
+          /* Down from 3.2rem */
+      }
+
+      .login-brand-panel h1 {
+          font-size: 2.2rem;
+          /* Down from 2.8rem */
+      }
+  }
+
+  /* =================================== */
+  /* == MOBILE OPTIMIZATIONS FOR DASHBOARD == */
+  /* =================================== */
+
+  @media (max-width: 768px) {
+
+      /* --- 1. Fix the Overlapping Content --- */
+      /* This ensures the sidebar and main content have their own space and don't overlap */
+      .dashboard-sidebar {
+          z-index: 10;
+          position: relative;
+          /* Prevents content from overlapping */
+      }
+
+      .dashboard-main {
+          z-index: 5;
+          position: relative;
+      }
+
+      /* --- 2. Clean Up the Header --- */
+      .header-user-info {
+          gap: 8px;
+          /* Reduce space between header buttons */
+      }
+
+      /* Hide the long welcome text on very small screens */
+      #admin-welcome {
+          display: none;
+      }
+
+      /* --- 3. Improve the Gallery/Client List --- */
+      .item {
+          flex-direction: column;
+          /* Stack item content vertically */
+          align-items: flex-start;
+          gap: 15px;
+      }
+
+      .item-info {
+          width: 100%;
+      }
+
+      .item-actions {
+          width: 100%;
+          justify-content: flex-end;
+          /* Align buttons to the right */
+          gap: 12px;
+          /* Add more space between buttons */
+      }
+
+      .actions-cell {
+          align-self: flex-end;
+          /* Move the '...' dropdown to the end */
+      }
+
+      /* --- 4. Refine the Stat Cards --- */
+      .stat-card {
+          padding: 15px;
+          /* Reduce padding to save space */
+      }
+
+      .stat-number {
+          font-size: 2rem;
+          /* Make the number slightly smaller */
+      }
+
+      .stat-label {
+          font-size: 0.8rem;
+      }
+  }
+
+  /* On very narrow screens, make welcome text visible but shorter */
+  @media (min-width: 480px) and (max-width: 768px) {
+      #admin-welcome {
+          display: inline;
+          max-width: 150px;
+          /* Give it a max width */
+          white-space: nowrap;
+          /* Prevent wrapping */
+          overflow: hidden;
+          /* Hide the overflow */
+          text-overflow: ellipsis;
+          /* Add '...' */
       }
   }

@@ -968,6 +968,17 @@ body.lightbox-active .sticky-submit-btn {
 }
 
 @media (max-width: 768px) {
+
+    /* Inside your @media (max-width: 768px) block */
+    .selection-checkbox {
+        width: 38px;
+        /* Increase size from 32px */
+        height: 38px;
+        top: 8px;
+        /* Adjust position */
+        right: 8px;
+    }
+
     .main-nav .nav-list {
         display: none;
         position: absolute;
@@ -1089,6 +1100,7 @@ body.lightbox-active .sticky-submit-btn {
     font-size: 1rem;
     padding: 5px;
 }
+
 /* In public/css/style.css */
 
 .photo-container {
@@ -1141,24 +1153,46 @@ body.lightbox-active .sticky-submit-btn {
     opacity: 0;
     pointer-events: none;
 }
+
 /* Add to the end of public/css/style.css */
 
 #lightbox-loader {
-    position: absolute; /* Center it inside the lightbox */
+    position: absolute;
+    /* Center it inside the lightbox */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 60px;   /* Make it a bit larger than the thumbnail loaders */
+    width: 60px;
+    /* Make it a bit larger than the thumbnail loaders */
     height: 60px;
     border-width: 6px;
-    display: none; /* Hide it by default */
-    z-index: 1004; /* Ensure it's on top of the old image */
+    display: none;
+    /* Hide it by default */
+    z-index: 1004;
+    /* Ensure it's on top of the old image */
 }
+
 /* In public/css/style.css */
 /* Add this new rule to your stylesheet */
 
 #loading-sentinel {
-    position: relative; /* This is the key fix */
-    height: 100px;      /* Give the container some space for the spinner */
+    position: relative;
+    /* This is the key fix */
+    height: 100px;
+    /* Give the container some space for the spinner */
     text-align: center;
+}
+
+@media (max-width: 480px) {
+
+    /* Reduce heading sizes on very small screens */
+    #page-title-header h1 {
+        font-size: 2.5rem;
+        /* Down from 3.2rem */
+    }
+
+    .login-brand-panel h1 {
+        font-size: 2.2rem;
+        /* Down from 2.8rem */
+    }
 }
