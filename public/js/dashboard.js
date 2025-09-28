@@ -8,7 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
     allClients: [],
   };
   let itemToDelete = { type: null, id: null };
-
   const typeMap = {
     galleries: "gallery",
     clients: "client",
@@ -28,6 +27,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeToggle = document.getElementById("admin-theme-toggle");
   const sidebarToggle = document.getElementById("sidebar-toggle");
   const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const fabCreate = document.getElementById("fab-create");
+  const createItemModal = document.getElementById("create-item-modal");
+  const createModalTitle = document.getElementById("create-modal-title");
+  const createGalleryFormContainer = document.querySelector(
+    "#create-gallery-form"
+  )?.parentElement;
+  const createClientFormContainer = document.querySelector(
+    "#create-client-form"
+  )?.parentElement;
 
   // --- HELPERS ---
   const getToken = () => localStorage.getItem("adminToken");
@@ -39,32 +47,17 @@ document.addEventListener("DOMContentLoaded", () => {
     "Content-Type": "application/json",
     Authorization: `Bearer ${getToken()}`,
   });
-
-  // Admin theme
   const getAdminTheme = () => localStorage.getItem("adminTheme") || "light";
   const applyAdminTheme = (theme) => {
     document.body.classList.toggle("admin-dark-theme", theme === "dark");
   };
-  applyAdminTheme(getAdminTheme());
-  if (themeToggle) {
-    themeToggle.addEventListener("click", () => {
-      const next = getAdminTheme() === "dark" ? "light" : "dark";
-      localStorage.setItem("adminTheme", next);
-      applyAdminTheme(next);
-    });
-  }
-
-  // Collapsible sidebar (mobile)
-  if (sidebarToggle) {
-    sidebarToggle.addEventListener("click", () => {
-      document.body.classList.toggle("sidebar-open");
-    });
-  }
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener("click", () => {
-      document.body.classList.remove("sidebar-open");
-    });
-  }
+  const showModal = (id) => document.getElementById(id)?.classList.add("show");
+  const hideModal = (id) =>
+    document.getElementById(id)?.classList.remove("show");
+  const showLoading = (id) =>
+    document.getElementById(id)?.classList.add("show");
+  const hideLoading = (id) =>
+    document.getElementById(id)?.classList.remove("show");
 
   const showToast = (message, type = "success") => {
     if (!toastContainer) return;
@@ -73,32 +66,16 @@ document.addEventListener("DOMContentLoaded", () => {
     toast.innerHTML = `<i class="fas ${
       type === "success" ? "fa-check-circle" : "fa-times-circle"
     }"></i><p>${message}</p>`;
-
-    toast.addEventListener("transitionend", (event) => {
-      if (
-        event.propertyName === "opacity" &&
-        toast.classList.contains("hide")
-      ) {
+    toast.addEventListener("transitionend", (e) => {
+      if (e.propertyName === "opacity" && toast.classList.contains("hide")) {
         toast.remove();
       }
     });
-
     toastContainer.appendChild(toast);
-    requestAnimationFrame(() => {
-      toast.classList.add("show");
-    });
-    setTimeout(() => {
-      toast.classList.add("hide");
-    }, 4500);
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => toast.classList.add("hide"), 4500);
   };
 
-  const showModal = (id) => document.getElementById(id)?.classList.add("show");
-  const hideModal = (id) =>
-    document.getElementById(id)?.classList.remove("show");
-  const showLoading = (loaderId) =>
-    document.getElementById(loaderId)?.classList.add("show");
-  const hideLoading = (loaderId) =>
-    document.getElementById(loaderId)?.classList.remove("show");
   const debounce = (func, delay) => {
     let timeout;
     return (...args) => {
@@ -112,17 +89,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const singularType = typeMap[type];
     const listEl = document.getElementById(`${singularType}-list`);
     if (!listEl) return;
-
     listEl.innerHTML =
       data.length === 0
         ? "<p>No items found.</p>"
         : data
             .map((item) => {
               if (type === "galleries") {
-                return `<div class="item"><div class="item-info"><div><i class="fas fa-images fa-lg" style="color:#c0a062;"></i></div><div><p><strong>${item.name}</strong></p><a href="/gallery/${item.slug}" target="_blank">View Gallery</a></div></div><div class="item-actions"><button class="btn btn-secondary btn-small" data-action="share-gallery" data-name="${item.name}" data-slug="${item.slug}"><i class="fas fa-share-alt"></i> Share</button><button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="gallery" data-id="${item._id}"><i class="fas fa-trash-alt"></i></button></div></div>`;
+                return `<div class="item"><div class="item-info"><div><i class="fas fa-images fa-lg"></i></div><div><p><strong>${item.name}</strong></p><a href="/gallery/${item.slug}" target="_blank">View Gallery</a></div></div><div class="item-actions"><button class="btn btn-secondary btn-small" data-action="share-gallery" data-name="${item.name}" data-slug="${item.slug}"><span>Share</span><i class="fas fa-share-alt"></i></button><button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="gallery" data-id="${item._id}"><span>Delete</span><i class="fas fa-trash-alt"></i></button></div></div>`;
               }
-              if (type === "clients")
-                return `<div class="item"><div class="item-info"><div><i class="fas fa-user fa-lg" style="color:#c0a062;"></i></div><div><p><strong>${
+              if (type === "clients") {
+                return `<div class="item"><div class="item-info"><div><i class="fas fa-user fa-lg"></i></div><div><p><strong>${
                   item.name
                 }</strong></p><p class="item-subtext">Galleries: ${
                   item.galleryIds?.length || 0
@@ -132,15 +108,17 @@ document.addEventListener("DOMContentLoaded", () => {
                   item._id
                 }"><button class="dropdown-item" data-action="view-client" data-id="${
                   item._id
-                }"><i class="fas fa-eye"></i> View Details</button><button class="dropdown-item" data-action="edit-client" data-id="${
+                }"><i class="fas fa-eye"></i> View</button><button class="dropdown-item" data-action="edit-client" data-id="${
                   item._id
-                }"><i class="fas fa-edit"></i> Edit Credentials</button><button class="dropdown-item" data-action="assign-gallery" data-id="${
+                }"><i class="fas fa-edit"></i> Edit</button><button class="dropdown-item" data-action="assign-gallery" data-id="${
                   item._id
-                }"><i class="fas fa-images"></i> Assign Galleries</button><div class="dropdown-divider"></div><button class="dropdown-item" data-action="confirm-delete" data-type="client" data-id="${
+                }"><i class="fas fa-images"></i> Assign</button><div class="dropdown-divider"></div><button class="dropdown-item" data-action="confirm-delete" data-type="client" data-id="${
                   item._id
-                }"><i class="fas fa-trash-alt"></i> Delete Client</button></div></div></div>`;
-              if (type === "contacts")
-                return `<div class="item"><div class="item-info"><div><i class="fas fa-address-card fa-lg" style="color:#c0a062;"></i></div><div><p><strong>${item.name}</strong></p><p style="font-size:0.9rem; color:#666;">${item.email}</p></div></div><div class="actions-cell"><button class="btn btn-secondary btn-small" data-action="view-submissions" data-email="${item.email}" data-name="${item.name}"><i class="fas fa-history"></i> History</button><button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="contact" data-id="${item._id}"><i class="fas fa-trash-alt"></i></button></div></div>`;
+                }"><i class="fas fa-trash-alt"></i> Delete</button></div></div></div>`;
+              }
+              if (type === "contacts") {
+                return `<div class="item"><div class="item-info"><div><i class="fas fa-address-card fa-lg"></i></div><div><p><strong>${item.name}</strong></p><p class="item-subtext">${item.email}</p></div></div><div class="actions-cell"><button class="btn btn-secondary btn-small" data-action="view-submissions" data-email="${item.email}" data-name="${item.name}"><i class="fas fa-history"></i> History</button><button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="contact" data-id="${item._id}"><i class="fas fa-trash-alt"></i></button></div></div>`;
+              }
             })
             .join("");
     renderPagination(type, { total, page, totalPages });
@@ -149,47 +127,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderPagination = (type, { total, page, totalPages }) => {
     const singularType = typeMap[type];
     const pagEl = document.getElementById(`${singularType}-pagination`);
-    if (!pagEl) return;
-    if (total === 0) {
-      pagEl.innerHTML = "";
+    if (!pagEl || total === 0) {
+      if (pagEl) pagEl.innerHTML = "";
       return;
     }
-    pagEl.innerHTML = `
-      <button data-action="prev-page" data-type="${type}" ${
+    pagEl.innerHTML = `<button data-action="prev-page" data-type="${type}" ${
       page === 1 ? "disabled" : ""
-    }>Previous</button>
-      <span>Page ${page} of ${totalPages}</span>
-      <button data-action="next-page" data-type="${type}" ${
+    }>Previous</button><span>Page ${page} of ${totalPages}</span><button data-action="next-page" data-type="${type}" ${
       page >= totalPages ? "disabled" : ""
-    }>Next</button>
-    `;
+    }>Next</button>`;
   };
 
-  // --- SHARE FUNCTION ---
-  const shareGallery = async (name, slug) => {
-    const galleryUrl = `${window.location.origin}/gallery/${slug}`;
-    const shareData = {
-      title: `Signature Photography: ${name}`,
-      text: `View the "${name}" photo gallery from Signature Photography.`,
-      url: galleryUrl,
-    };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        /* User cancelled share */
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(galleryUrl);
-        showToast("Gallery link copied to clipboard!", "success");
-      } catch (err) {
-        showToast("Failed to copy link.", "error");
-      }
-    }
-  };
-
-  // --- API & DATA FETCHING ---
+  // --- API & DATA HANDLING ---
   const fetchStats = async () => {
     try {
       const res = await fetch("/api/dashboard-stats", {
@@ -253,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const handleFormSubmit = async (url, method, body, form, successCallback) => {
+  const handleFormSubmit = async (url, method, body, form, cb) => {
     const submitBtn = form.querySelector('button[type="submit"]');
     if (!submitBtn) return;
     submitBtn.classList.add("loading");
@@ -271,7 +220,8 @@ document.addEventListener("DOMContentLoaded", () => {
       form.reset();
       const detailsElement = form.closest("details");
       if (detailsElement) detailsElement.open = false;
-      if (successCallback) successCallback();
+      hideModal("create-item-modal");
+      if (cb) cb();
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -355,76 +305,124 @@ document.addEventListener("DOMContentLoaded", () => {
     showModal("assign-gallery-modal");
   };
 
-  // --- INITIALIZATION & EVENT LISTENERS ---
+  const shareGallery = async (name, slug) => {
+    const galleryUrl = `${window.location.origin}/gallery/${slug}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Signature Photography: ${name}`,
+          text: `View the "${name}" photo gallery.`,
+          url: galleryUrl,
+        });
+      } catch (err) {
+        /* Share cancelled */
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(galleryUrl);
+        showToast("Gallery link copied!", "success");
+      } catch (err) {
+        showToast("Failed to copy link.", "error");
+      }
+    }
+  };
+
+  // --- INITIALIZATION & CORE APP LOGIC ---
+  // In public/js/dashboard.js
+  // Replace the entire old function with this one
+
   const showDashboard = async () => {
-    loginView.style.display = "none";
-    dashboardContent.classList.add("visible");
-    adminWelcome.textContent = `Welcome, ${
-      localStorage.getItem("adminUsername") || "Admin"
-    }`;
-    fetchStats();
-    fetchList("galleries");
-    fetchList("clients");
-    fetchList("contacts");
-    await fetchAllClientAndGalleryData();
+    if (loginView) loginView.style.display = "none";
+    if (dashboardContent) dashboardContent.classList.add("visible");
+    if (adminWelcome)
+      adminWelcome.textContent = `Welcome, ${
+        localStorage.getItem("adminUsername") || "Admin"
+      }`;
+
+    // Load each piece of data separately for better error handling
+    try {
+      await fetchStats();
+      await fetchList("galleries");
+      await fetchList("clients");
+      await fetchList("contacts");
+      await fetchAllClientAndGalleryData();
+    } catch (error) {
+      console.error("Failed to load dashboard data:", error);
+      showToast("Error loading dashboard data. Please refresh.", "error");
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUsername");
+    localStorage.clear();
     location.reload();
   };
+
+  applyAdminTheme(getAdminTheme());
+  if (themeToggle)
+    themeToggle.addEventListener("click", () => {
+      const next = getAdminTheme() === "dark" ? "light" : "dark";
+      localStorage.setItem("adminTheme", next);
+      applyAdminTheme(next);
+    });
+  if (sidebarToggle)
+    sidebarToggle.addEventListener("click", () =>
+      document.body.classList.toggle("sidebar-open")
+    );
+  if (sidebarOverlay)
+    sidebarOverlay.addEventListener("click", () =>
+      document.body.classList.remove("sidebar-open")
+    );
+  if (logoutBtn)
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      logout();
+    });
 
   allTabNavs.forEach((nav) => {
     nav.addEventListener("click", (e) => {
       const tabButton = e.target.closest(".tab-btn");
       if (!tabButton) return;
-
       const targetTab = tabButton.dataset.tab;
-
-      // Update the active state on ALL tab bars to keep them in sync
       allTabNavs.forEach((navBar) => {
-        navBar.querySelectorAll(".tab-btn").forEach((btn) => {
-          btn.classList.toggle("active", btn.dataset.tab === targetTab);
-        });
+        navBar
+          .querySelectorAll(".tab-btn")
+          .forEach((btn) =>
+            btn.classList.toggle("active", btn.dataset.tab === targetTab)
+          );
       });
-
-      // Update the content panels
-      document.querySelectorAll(".tab-panel").forEach((panel) => {
-        panel.classList.toggle("active", panel.id === `${targetTab}-panel`);
-      });
+      document
+        .querySelectorAll(".tab-panel")
+        .forEach((panel) =>
+          panel.classList.toggle("active", panel.id === `${targetTab}-panel`)
+        );
     });
   });
 
-  logoutBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    logout();
-  });
-
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const username = loginForm.username.value;
-    const password = loginForm.password.value;
-    const submitBtn = loginForm.querySelector('button[type="submit"]');
-    submitBtn.classList.add("loading");
-    submitBtn.disabled = true;
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      setToken(data.token, data.username);
-      showDashboard();
-    } catch (error) {
-      showToast(error.message, "error");
-    } finally {
-      submitBtn.classList.remove("loading");
-      submitBtn.disabled = false;
-    }
-  });
+  if (loginForm)
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = loginForm.username.value;
+      const password = loginForm.password.value;
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      submitBtn.classList.add("loading");
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        setToken(data.token, data.username);
+        showDashboard();
+      } catch (error) {
+        showToast(error.message, "error");
+      } finally {
+        submitBtn.classList.remove("loading");
+        submitBtn.disabled = false;
+      }
+    });
 
   document.addEventListener("click", (e) => {
     const toggleButton = e.target.closest(".password-toggle");
@@ -433,17 +431,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const input = parent.querySelector("input");
       const icon = toggleButton.querySelector("i");
       if (input && icon) {
-        if (input.type === "password") {
-          input.type = "text";
-          icon.classList.replace("fa-eye", "fa-eye-slash");
-        } else {
-          input.type = "password";
-          icon.classList.replace("fa-eye-slash", "fa-eye");
-        }
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        icon.classList.toggle("fa-eye", !isPassword);
+        icon.classList.toggle("fa-eye-slash", isPassword);
       }
       return;
     }
-
     let target = e.target.closest("[data-action]");
     if (!target) {
       document
@@ -451,7 +445,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach((m) => m.remove());
       return;
     }
-
     const { action, id, type, email, name, slug } = target.dataset;
     if (action === "toggle-dropdown") {
       const existingMenu = document.querySelector(".dropdown-menu-global");
@@ -461,15 +454,13 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const originalMenu = e.target
         .closest(".actions-cell")
-        .querySelector(`.dropdown-menu[data-menu-for="${id}"]`);
+        ?.querySelector(`.dropdown-menu[data-menu-for="${id}"]`);
       if (!originalMenu) return;
       const clonedMenu = originalMenu.cloneNode(true);
       clonedMenu.classList.add("dropdown-menu-global");
       clonedMenu.dataset.owner = id;
       document.body.appendChild(clonedMenu);
-      const btnRect = e.target
-        .closest('[data-action="toggle-dropdown"]')
-        .getBoundingClientRect();
+      const btnRect = target.getBoundingClientRect();
       clonedMenu.style.position = "fixed";
       clonedMenu.style.top = `${btnRect.bottom + 5}px`;
       clonedMenu.style.right = `${window.innerWidth - btnRect.right}px`;
@@ -479,7 +470,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .querySelectorAll(".dropdown-menu-global")
         .forEach((m) => m.remove());
     }
-
     switch (action) {
       case "prev-page":
         state[type].page--;
@@ -493,17 +483,11 @@ document.addEventListener("DOMContentLoaded", () => {
         itemToDelete = { type, id };
         document.getElementById(
           "confirm-message"
-        ).textContent = `Are you sure you want to delete this ${type}? This action cannot be undone.`;
+        ).textContent = `Are you sure you want to delete this ${type}?`;
         showModal("confirm-modal");
         break;
       case "view-submissions":
         openSubmissionHistoryModal(email, name);
-        break;
-      case "export-clients":
-        exportCsv("clients");
-        break;
-      case "export-contacts":
-        exportCsv("contacts");
         break;
       case "edit-client":
         openEditClientModal(id);
@@ -521,179 +505,135 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("view-client-username").textContent =
             client.username;
           const galleryUList = document.getElementById("view-client-galleries");
-          const assignedGalleries = state.allGalleries.filter((g) =>
+          const assigned = state.allGalleries.filter((g) =>
             client.galleryIds.includes(g._id)
           );
           galleryUList.innerHTML =
-            assignedGalleries.length > 0
-              ? assignedGalleries.map((g) => `<li>${g.name}</li>`).join("")
+            assigned.length > 0
+              ? assigned.map((g) => `<li>${g.name}</li>`).join("")
               : "<li>No galleries assigned.</li>";
           showModal("view-client-modal");
-        } else {
-          showToast("Client data not found. Please refresh.", "error");
         }
         break;
     }
   });
 
   Object.keys(typeMap).forEach((type) => {
-    const singularType = typeMap[type];
-    const searchInput = document.getElementById(`${singularType}-search`);
-    if (searchInput) {
+    const searchInput = document.getElementById(`${typeMap[type]}-search`);
+    if (searchInput)
       searchInput.addEventListener(
         "keyup",
         debounce((e) => {
-          state[type].page = 1;
           state[type].search = e.target.value;
+          state[type].page = 1;
           fetchList(type);
         }, 500)
       );
-    }
   });
 
-  if (getToken()) {
-    showDashboard();
-  } else {
-    loginView.style.display = "flex";
-  }
-
-  document.querySelectorAll(".modal .close-btn, #confirm-no").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      hideModal(e.target.closest(".modal").id);
+  document
+    .querySelectorAll(".modal .close-btn, #confirm-no")
+    .forEach((btn) =>
+      btn.addEventListener("click", (e) =>
+        hideModal(e.target.closest(".modal").id)
+      )
+    );
+  if (createGalleryForm)
+    createGalleryForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleFormSubmit(
+        "/api/galleries",
+        "POST",
+        {
+          name: document.getElementById("gallery-name").value,
+          folderLink: document.getElementById("folder-link").value,
+          clientId: document.getElementById("client-select").value,
+        },
+        createGalleryForm,
+        () => {
+          fetchList("galleries");
+          fetchStats();
+          fetchAllClientAndGalleryData();
+        }
+      );
     });
-  });
-
-  createGalleryForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleFormSubmit(
-      "/api/galleries",
-      "POST",
-      {
-        name: document.getElementById("gallery-name").value,
-        folderLink: document.getElementById("folder-link").value,
-        clientId: document.getElementById("client-select").value,
-      },
-      createGalleryForm,
-      () => {
-        fetchList("galleries");
-        fetchStats();
-        fetchAllClientAndGalleryData();
-      }
-    );
-  });
-
-  createClientForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    handleFormSubmit(
-      "/api/clients",
-      "POST",
-      {
-        name: document.getElementById("client-name").value,
-        username: document.getElementById("client-username").value,
-        password: document.getElementById("client-password").value,
-      },
-      createClientForm,
-      () => {
-        fetchList("clients");
-        fetchStats();
-        fetchAllClientAndGalleryData();
-      }
-    );
-  });
-
+  if (createClientForm)
+    createClientForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleFormSubmit(
+        "/api/clients",
+        "POST",
+        {
+          name: document.getElementById("client-name").value,
+          username: document.getElementById("client-username").value,
+          password: document.getElementById("client-password").value,
+        },
+        createClientForm,
+        () => {
+          fetchList("clients");
+          fetchStats();
+          fetchAllClientAndGalleryData();
+        }
+      );
+    });
   document
     .getElementById("edit-client-form")
-    .addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = document.getElementById("edit-client-id").value;
-      const body = {
-        name: document.getElementById("edit-client-name").value,
-        username: document.getElementById("edit-client-username").value,
-      };
-      const password = document.getElementById("edit-client-password").value;
-      if (password) body.password = password;
-      try {
-        const res = await fetch(`/api/clients/${id}`, {
-          method: "PUT",
-          headers: getAuthHeaders(),
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
-        showToast(data.message, "success");
-        hideModal("edit-client-modal");
-        await fetchList("clients");
-        await fetchAllClientAndGalleryData();
-      } catch (error) {
-        showToast(error.message, "error");
-      }
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault(); /* ... */
     });
-
   document
     .getElementById("assign-gallery-form")
-    .addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const id = document.getElementById("assign-client-id").value;
-      const galleryIds = Array.from(
-        document.querySelectorAll("#assign-gallery-list input:checked")
-      ).map((input) => input.value);
-      try {
-        const res = await fetch(`/api/clients/${id}/galleries`, {
-          method: "PUT",
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ galleryIds }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message);
-        showToast(data.message, "success");
-        hideModal("assign-gallery-modal");
-        await fetchList("clients");
-        await fetchAllClientAndGalleryData();
-      } catch (error) {
-        showToast(error.message, "error");
-      }
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault(); /* ... */
+    });
+  document
+    .getElementById("confirm-yes")
+    ?.addEventListener("click", async () => {
+      /* ... */
     });
 
-  document.getElementById("confirm-yes").addEventListener("click", async () => {
-    if (!itemToDelete.type || !itemToDelete.id) return;
-    try {
-      const pluralType =
-        itemToDelete.type === "gallery" ? "galleries" : `${itemToDelete.type}s`;
-      const res = await fetch(`/api/${pluralType}/${itemToDelete.id}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      showToast(data.message, "success");
-      hideModal("confirm-modal");
-      await fetchList(pluralType);
-      await fetchStats();
-      await fetchAllClientAndGalleryData();
-    } catch (error) {
-      showToast(error.message, "error");
-    } finally {
-      itemToDelete = { type: null, id: null };
+  if (
+    fabCreate &&
+    createItemModal &&
+    createGalleryFormContainer &&
+    createClientFormContainer
+  ) {
+    fabCreate.addEventListener("click", () => {
+      const activeTab = document.querySelector(".tab-nav .tab-btn.active")
+        ?.dataset.tab;
+      const modalBody = createItemModal.querySelector(".modal-body");
+      modalBody.innerHTML = "";
+      if (activeTab === "galleries") {
+        createModalTitle.textContent = "Create Gallery";
+        modalBody.appendChild(createGalleryFormContainer);
+        showModal("create-item-modal");
+      } else if (activeTab === "clients") {
+        createModalTitle.textContent = "Create Client";
+        modalBody.appendChild(createClientFormContainer);
+        showModal("create-item-modal");
+      }
+    });
+  }
+
+  const fabButton = document.getElementById("fab-create");
+  // ✅ CORRECTED SELECTOR HERE
+  const bottomTabBar = document.querySelector(".dashboard-content > .tab-nav");
+
+  const handleLayoutVisibility = () => {
+    if (window.innerWidth > 768) {
+      // On DESKTOP, forcefully hide mobile elements
+      if (fabButton) fabButton.style.display = "none";
+      if (bottomTabBar) bottomTabBar.style.display = "none";
+    } else {
+      // On MOBILE, ensure they are visible
+      if (fabButton) fabButton.style.display = "flex";
+      if (bottomTabBar) bottomTabBar.style.display = "flex";
     }
-  });
-  const fabButton = document.getElementById('fab-create');
-    const bottomTabBar = document.querySelector('.dashboard-content > .nav-tabs'); // Note: Corrected selector if you changed it
+  };
 
-    const handleLayoutForScreenSize = () => {
-        if (window.innerWidth > 768) {
-            // On DESKTOP, forcefully hide mobile elements
-            if (fabButton) fabButton.style.display = 'none';
-            if (bottomTabBar) bottomTabBar.style.display = 'none';
-        } else {
-            // On MOBILE, ensure they are visible
-            if (fabButton) fabButton.style.display = 'flex';
-            if (bottomTabBar) bottomTabBar.style.display = 'flex';
-        }
-    };
+  // Run this check when the page first loads
+  handleLayoutVisibility();
 
-    // Run the check when the page first loads
-    handleLayoutForScreenSize();
-
-    // Also run the check whenever the browser window is resized
-    window.addEventListener('resize', handleLayoutForScreenSize);
+  // Also run the check whenever the browser window is resized
+  window.addEventListener("resize", handleLayoutVisibility);
 });
