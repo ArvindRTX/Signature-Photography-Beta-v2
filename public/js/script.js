@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
     "lightbox-selection-checkbox"
   );
   const lightboxLoader = document.getElementById("lightbox-loader");
-  console.log("Checking for #loading-sentinel element:", loadingSentinel);
 
   // --- OBSERVER FOR LAZY LOADING IMAGES ---
   const imageObserver = new IntersectionObserver(
@@ -49,6 +48,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     },
     { rootMargin: "200px" }
+  );
+
+  // --- OBSERVER FOR PAGINATION ---
+  const paginationObserver = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        fetchPhotos();
+      }
+    },
+    { rootMargin: "400px" }
   );
 
   // --- HELPERS ---
@@ -84,43 +93,42 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // --- API & DATA FETCHING ---
-  // In public/js/script.js
-
-const fetchPhotos = async () => {
+  const fetchPhotos = async () => {
     if (isLoading || (currentPage > totalPages && totalPages > 1)) return;
     isLoading = true;
-
-    // The FIX is changing 'block' to 'inline-block' to match the CSS
-    if (loadingSentinel) loadingSentinel.querySelector('.loader').style.display = 'inline-block';
+    if (loadingSentinel)
+      loadingSentinel.querySelector(".loader").style.display = "inline-block";
 
     try {
-        const res = await fetch(`/api/my-gallery?slug=${gallerySlug}&page=${currentPage}&limit=50`, {
-            headers: { Authorization: `Bearer ${getClientToken()}` },
-        });
-        if (res.status === 401) {
-            sessionStorage.clear();
-            window.location.reload();
-            return;
+      const res = await fetch(
+        `/api/my-gallery?slug=${gallerySlug}&page=${currentPage}&limit=50`,
+        {
+          headers: { Authorization: `Bearer ${getClientToken()}` },
         }
-        if (!res.ok) throw new Error("Failed to fetch gallery data.");
-
-        const data = await res.json();
-        totalPages = data.totalPages;
-        allPhotos.push(...data.photos);
-        renderPhotos(data.photos);
-        currentPage++;
+      );
+      if (res.status === 401) {
+        sessionStorage.clear();
+        window.location.reload();
+        return;
+      }
+      if (!res.ok) throw new Error("Failed to fetch gallery data.");
+      const data = await res.json();
+      totalPages = data.totalPages;
+      allPhotos.push(...data.photos);
+      renderPhotos(data.photos);
+      currentPage++;
     } catch (error) {
-        console.error(error);
+      console.error(error);
     } finally {
-        isLoading = false;
-        // Also hide the spinner when done
-        if (loadingSentinel) loadingSentinel.querySelector('.loader').style.display = 'none';
-
-        if (currentPage > totalPages && loadingSentinel) {
-            loadingSentinel.style.display = 'none';
-        }
+      isLoading = false;
+      if (loadingSentinel)
+        loadingSentinel.querySelector(".loader").style.display = "none";
+      if (currentPage > totalPages && loadingSentinel) {
+        loadingSentinel.style.display = "none";
+      }
     }
-};
+  };
+
   // --- RENDER FUNCTIONS ---
   const renderPhotos = (photos) => {
     const fragment = document.createDocumentFragment();
@@ -148,23 +156,21 @@ const fetchPhotos = async () => {
       fragment.appendChild(container);
       imageObserver.observe(container);
     });
-    photoGallery.appendChild(fragment);
+    if (photoGallery) photoGallery.appendChild(fragment);
   };
 
   const updateStickyButtonVisibility = () => {
-    if (stickySubmitBtn && selectedPhotos.length > 0) {
-      stickySubmitBtn.classList.add("visible");
-    } else if (stickySubmitBtn) {
-      stickySubmitBtn.classList.remove("visible");
+    if (stickySubmitBtn) {
+      stickySubmitBtn.classList.toggle("visible", selectedPhotos.length > 0);
     }
   };
 
   const updateSelectionUI = () => {
     const count = selectedPhotos.length;
     if (selectionCountBtn) selectionCountBtn.textContent = count;
-    if (document.getElementById("selection-count-modal")) {
-      document.getElementById("selection-count-modal").textContent = count;
-    }
+    const modalCountEl = document.getElementById("selection-count-modal");
+    if (modalCountEl) modalCountEl.textContent = count;
+
     document.querySelectorAll(".photo-container").forEach((el) => {
       el.classList.toggle(
         "selected",
@@ -184,22 +190,9 @@ const fetchPhotos = async () => {
   };
 
   // --- LIGHTBOX LOGIC ---
-  // In public/js/script.js
-
   const openLightbox = (photoId) => {
-    console.log(`2. openLightbox received ID: ${photoId}`);
-
     currentLightboxIndex = allPhotos.findIndex((p) => p.id === photoId);
-    console.log(`3. Found photo at index: ${currentLightboxIndex}`);
-
-    if (currentLightboxIndex === -1) {
-      console.error("ERROR: Photo ID was not found in the allPhotos array!");
-      return;
-    }
-
-    const foundPhoto = allPhotos[currentLightboxIndex];
-    console.log("4. The photo object at that index is:", foundPhoto);
-
+    if (currentLightboxIndex === -1) return;
     updateLightboxImage();
     if (lightboxOverlay) lightboxOverlay.style.display = "flex";
     document.body.classList.add("lightbox-active");
@@ -208,10 +201,7 @@ const fetchPhotos = async () => {
   const closeLightbox = () => {
     if (lightboxOverlay) lightboxOverlay.style.display = "none";
     if (lightboxImg) lightboxImg.src = "";
-
-    // Also hide the loader if the lightbox is closed early
     if (lightboxLoader) lightboxLoader.style.display = "none";
-
     currentLightboxIndex = -1;
     document.body.classList.remove("lightbox-active");
   };
@@ -219,23 +209,14 @@ const fetchPhotos = async () => {
   const updateLightboxImage = () => {
     if (currentLightboxIndex < 0 || !allPhotos[currentLightboxIndex]) return;
     const photo = allPhotos[currentLightboxIndex];
-
     if (lightboxImg && lightboxLoader) {
-      // 1. Show the loader
       lightboxLoader.style.display = "block";
-      // 2. Hide the old image to prevent showing stale content
       lightboxImg.style.opacity = "0";
-
       lightboxImg.referrerPolicy = "no-referrer";
-
-      // 3. When the new image finishes loading...
       lightboxImg.onload = () => {
-        // 4. Hide the loader and show the image
         lightboxLoader.style.display = "none";
         lightboxImg.style.opacity = "1";
       };
-
-      // 5. Set the src to start the download
       lightboxImg.src = `https://drive.google.com/thumbnail?id=${photo.id}&sz=w1920`;
     }
     updateSelectionUI();
@@ -252,13 +233,6 @@ const fetchPhotos = async () => {
     updateLightboxImage();
   };
 
-  const toggleLightboxSelection = () => {
-    if (currentLightboxIndex > -1) {
-      const photo = allPhotos[currentLightboxIndex];
-      toggleSelection(photo.id, photo.name);
-    }
-  };
-
   const toggleSelection = (photoId, photoName) => {
     const photo = { id: photoId, name: photoName };
     const index = selectedPhotos.findIndex((p) => p.id === photo.id);
@@ -270,11 +244,24 @@ const fetchPhotos = async () => {
     updateSelectionUI();
   };
 
-  // --- FORM VALIDATION & SELECTION ---
+  // --- FORM LOGIC ---
   const validateLoginForm = (username, password) => {
     const errors = [];
     if (!username.trim()) errors.push("Username is required");
     if (!password.trim()) errors.push("Password is required");
+    return errors;
+  };
+
+  const validateSubmissionForm = (name, email, phone) => {
+    const errors = [];
+    if (!name.trim()) errors.push("Name is required");
+    if (!email.trim()) errors.push("Email is required");
+    if (!phone.trim()) errors.push("Phone number is required");
+    if (name.length < 2) errors.push("Name must be at least 2 characters");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      errors.push("Please enter a valid email address");
+    if (!/^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/\s/g, "")))
+      errors.push("Please enter a valid phone number");
     return errors;
   };
 
@@ -284,24 +271,14 @@ const fetchPhotos = async () => {
     const welcomeTitle = clientName
       ? `Welcome, ${clientName.split(" ")[0]}`
       : "Select a Gallery";
-    clientLoginView.innerHTML = `
-            <div class="login-page-wrapper">
-                <div class="login-brand-panel"><h1>${welcomeTitle}</h1><p>You have access to multiple galleries. Please choose one to continue.</p></div>
-                <div class="login-form-panel"><div class="gallery-links">${galleries
-                  .map(
-                    (g) =>
-                      `<a href="/gallery/${g.slug}" class="submit-btn gallery-link-btn">${g.name}</a>`
-                  )
-                  .join("")}</div></div>
-            </div>`;
+    clientLoginView.innerHTML = `<div class="login-page-wrapper"><div class="login-brand-panel"><h1>${welcomeTitle}</h1><p>You have access to multiple galleries. Please choose one to continue.</p></div><div class="login-form-panel"><div class="gallery-links">${galleries
+      .map(
+        (g) =>
+          `<a href="/gallery/${g.slug}" class="submit-btn gallery-link-btn">${g.name}</a>`
+      )
+      .join("")}</div></div></div>`;
   };
 
-  const handleSubmitSelections = async (e) => {
-    e.preventDefault();
-    // This function is for the final submission form, its logic is defined in your index.html
-  };
-
-  // --- EVENT HANDLERS ---
   const handleLogin = async (e) => {
     e.preventDefault();
     clearLoginError();
@@ -338,6 +315,64 @@ const fetchPhotos = async () => {
     }
   };
 
+  const handleSubmitSelections = async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const clientName = document.getElementById("client-name").value;
+    const clientEmail = document.getElementById("client-email").value;
+    const clientPhone = document.getElementById("client-phone").value;
+    const validationErrors = validateSubmissionForm(
+      clientName,
+      clientEmail,
+      clientPhone
+    );
+    if (validationErrors.length > 0) {
+      showToast(validationErrors.join(". "), "error");
+      return;
+    }
+    if (selectedPhotos.length === 0) {
+      showToast("Please select at least one photo before submitting.", "error");
+      return;
+    }
+    submitBtn.classList.add("loading");
+    submitBtn.disabled = true;
+    const formData = {
+      clientName: clientName.trim(),
+      clientEmail: clientEmail.trim(),
+      clientPhone: clientPhone.trim(),
+      selectedPhotos: selectedPhotos,
+      gallerySlug: gallerySlug,
+    };
+    try {
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `Submission failed with status ${res.status}`
+        );
+      }
+      if (selectionForm) selectionForm.style.display = "none";
+      const successMessage = document.getElementById("success-message");
+      if (successMessage) successMessage.style.display = "block";
+      showToast("Your selections have been submitted successfully!", "success");
+      selectedPhotos = [];
+      updateSelectionUI();
+    } catch (error) {
+      console.error("Submission error:", error);
+      showToast(
+        error.message || "There was an error submitting your selections.",
+        "error"
+      );
+    } finally {
+      submitBtn.classList.remove("loading");
+      submitBtn.disabled = false;
+    }
+  };
+
   // --- UI LOGIC ---
   const showGalleryView = () => {
     if (clientLoginView) clientLoginView.style.display = "none";
@@ -356,88 +391,96 @@ const fetchPhotos = async () => {
   };
 
   // --- INITIALIZATION & EVENT LISTENERS ---
-  // In public/js/script.js
-// DELETE the entire section at the bottom of your file and REPLACE it with this:
-
-// --- INITIALIZATION & EVENT LISTENERS ---
-if (clientLoginForm) {
+  if (clientLoginForm) {
     clientLoginForm.addEventListener("submit", handleLogin);
-}
-
-if (photoGallery) {
+  }
+  if (photoGallery) {
     photoGallery.addEventListener("click", (e) => {
-        const container = e.target.closest(".photo-container");
-        if (!container) return;
-        if (e.target.classList.contains("selection-checkbox")) {
-            toggleSelection(container.dataset.photoId, container.dataset.photoName);
-        } else {
-            openLightbox(container.dataset.photoId);
-        }
+      const container = e.target.closest(".photo-container");
+      if (!container) return;
+      if (e.target.classList.contains("selection-checkbox")) {
+        toggleSelection(container.dataset.photoId, container.dataset.photoName);
+      } else {
+        openLightbox(container.dataset.photoId);
+      }
     });
-}
-
-if (lightboxClose) {
+  }
+  if (lightboxClose) {
     lightboxClose.addEventListener("click", closeLightbox);
     lightboxNext.addEventListener("click", showNextImage);
     lightboxPrev.addEventListener("click", showPrevImage);
-    lightboxCheckbox.addEventListener("click", toggleLightboxSelection);
-}
-
-if (stickySubmitBtn) {
-    stickySubmitBtn.addEventListener("click", () => {
-        if (selectedPhotos.length === 0) {
-            showToast("Please select at least one photo before submitting.", "error");
-            return;
-        }
-        if (submissionModal) submissionModal.style.display = "flex";
+    lightboxCheckbox.addEventListener("click", () => {
+      const current = allPhotos[currentLightboxIndex];
+      if (current) toggleSelection(current.id, current.name);
     });
-}
-
-if (closeModalBtn) {
-    closeModalBtn.addEventListener("click", () => {
-        if (submissionModal) submissionModal.style.display = "none";
+    // Keyboard navigation for lightbox
+    document.addEventListener("keydown", (e) => {
+      if (lightboxOverlay && lightboxOverlay.style.display === "flex") {
+        if (e.key === "Escape") closeLightbox();
+        if (e.key === "ArrowRight") showNextImage();
+        if (e.key === "ArrowLeft") showPrevImage();
+      }
     });
-}
+  }
 
-if (selectionForm) {
-    selectionForm.addEventListener("submit", handleSubmitSelections);
-}
-
-// Observer for triggering the next page load
-const paginationObserver = new IntersectionObserver((entries) => {
-    // This will now log to the console when it checks the element
-    console.log("Pagination observer is checking the sentinel..."); 
-    if (entries[0].isIntersecting) {
-        console.log("Sentinel is visible! Fetching more photos...");
-        fetchPhotos();
+  // Mobile navigation menu and dropdown toggle
+  const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
+  const navList = document.querySelector(".main-nav .nav-list");
+  if (mobileMenuToggle && navList) {
+    mobileMenuToggle.addEventListener("click", () => {
+      navList.classList.toggle("active");
+    });
+  }
+  document.addEventListener("click", (e) => {
+    const dropdownToggle = e.target.closest(".nav-item.dropdown > a");
+    if (dropdownToggle) {
+      e.preventDefault();
+      const parent = dropdownToggle.closest(".dropdown");
+      parent.classList.toggle("open");
     }
-}, { rootMargin: "400px" });
-
-if (loadingSentinel) {
+  });
+  if (stickySubmitBtn) {
+    stickySubmitBtn.addEventListener("click", () => {
+      if (selectedPhotos.length === 0) {
+        showToast(
+          "Please select at least one photo before submitting.",
+          "error"
+        );
+        return;
+      }
+      if (submissionModal) submissionModal.style.display = "flex";
+    });
+  }
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener("click", () => {
+      if (submissionModal) submissionModal.style.display = "none";
+    });
+  }
+  if (selectionForm) {
+    selectionForm.addEventListener("submit", handleSubmitSelections);
+  }
+  if (loadingSentinel) {
     paginationObserver.observe(loadingSentinel);
-}
-
-// General click listener for password toggles
-document.addEventListener('click', (e) => {
+  }
+  document.addEventListener("click", (e) => {
     const toggleButton = e.target.closest(".password-toggle");
     if (toggleButton) {
-        const parent = toggleButton.parentElement;
-        const input = parent.querySelector("input");
-        const icon = toggleButton.querySelector("i");
-        if (input && icon) {
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.replace("fa-eye", "fa-eye-slash");
-            } else {
-                input.type = "password";
-                icon.classList.replace("fa-eye-slash", "fa-eye");
-            }
+      const parent = toggleButton.parentElement;
+      const input = parent.querySelector("input");
+      const icon = toggleButton.querySelector("i");
+      if (input && icon) {
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.replace("fa-eye", "fa-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.replace("fa-eye-slash", "fa-eye");
         }
+      }
     }
-});
+  });
 
-// Initial page load logic
-if (getClientToken() && gallerySlug) {
+  if (getClientToken() && gallerySlug) {
     showGalleryView();
-}
+  }
 });

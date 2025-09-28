@@ -59,6 +59,17 @@
       --text-color: #e0e0e0;
       --text-muted: #a0a0a0;
       --background: #121212;
+
+      .item {
+          background: #2a2a2a;
+          /* Dark background for list items */
+          border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .item-subtext {
+          color: #888;
+          /* Lighter grey for subtext in dark mode */
+      }
   }
 
   * {
@@ -864,146 +875,259 @@
       }
   }
 
-  /* --- Responsive Design --- */
+  .dashboard-content>.tab-nav {
+      display: none;
+  }
+
+  .item-subtext {
+      font-size: 0.9rem;
+      color: #666;
+  }
+
+  /* =================================== */
+  /* ======== RESPONSIVE DESIGN ======== */
+  /* =================================== */
+
+  /* For Tablets and smaller */
+  /* In public/css/dashboard.css */
+
+  /* In public/css/dashboard.css */
+
+  /* In public/css/dashboard.css */
+
+  /* In public/css/dashboard.css */
+  /* Replace your entire existing @media (max-width: 1024px) block with this one */
+
   @media (max-width: 1024px) {
+
+      /* On tablets, switch to a single-column layout */
       #dashboard-content.visible {
           grid-template-columns: 1fr;
-          grid-template-rows: auto auto 1fr;
+          grid-template-rows: auto 1fr;
       }
 
-      /* sidebar becomes off-canvas via JS; main content spans full */
-
-      .sidebar-header {
-          display: none;
-      }
-
-      .sidebar-section {
-          flex: 1 1 300px;
+      .dashboard-header,
+      .dashboard-main {
+          grid-column: 1 / -1;
+          /* Make header and main content span the full width */
       }
 
       .dashboard-header {
-          grid-row: 1/2;
-          grid-column: 1/-1;
+          grid-row: 1 / 2;
       }
 
       .dashboard-main {
-          grid-row: 3/4;
-          grid-column: 1/-1;
-      }
-  }
-
-  @media (max-width: 768px) {
-
-      .dashboard-main {
-          padding: 15px;
+          grid-row: 2 / -1;
       }
 
-      .stats-grid {
-          grid-template-columns: 1fr 1fr;
-      }
-
-      .section-header {
-          flex-direction: column;
-          align-items: flex-start;
-      }
-  }
-
-  @media (max-width: 480px) {
-
-      /* Reduce heading sizes on very small screens */
-      #page-title-header h1 {
-          font-size: 2.5rem;
-          /* Down from 3.2rem */
-      }
-
-      .login-brand-panel h1 {
-          font-size: 2.2rem;
-          /* Down from 2.8rem */
-      }
-  }
-
-  /* =================================== */
-  /* == MOBILE OPTIMIZATIONS FOR DASHBOARD == */
-  /* =================================== */
-
-  @media (max-width: 768px) {
-
-      /* --- 1. Fix the Overlapping Content --- */
-      /* This ensures the sidebar and main content have their own space and don't overlap */
+      /* --- Off-Canvas Sidebar Logic for Tablets --- */
       .dashboard-sidebar {
-          z-index: 10;
-          position: relative;
-          /* Prevents content from overlapping */
+          position: fixed;
+          left: 0;
+          top: 0;
+          width: 280px;
+          height: 100vh;
+          z-index: 2000;
+
+          /* Start completely off-screen */
+          transform: translateX(-100%);
+          transition: transform 0.3s ease-in-out;
       }
 
-      .dashboard-main {
-          z-index: 5;
-          position: relative;
+      /* When the body has the 'sidebar-open' class, slide it in */
+      body.sidebar-open .dashboard-sidebar {
+          transform: translateX(0);
       }
 
-      /* --- 2. Clean Up the Header --- */
-      .header-user-info {
-          gap: 8px;
-          /* Reduce space between header buttons */
-      }
-
-      /* Hide the long welcome text on very small screens */
-      #admin-welcome {
+      /* The dark overlay to cover the main content */
+      .sidebar-overlay {
           display: none;
       }
 
-      /* --- 3. Improve the Gallery/Client List --- */
-      .item {
-          flex-direction: column;
-          /* Stack item content vertically */
-          align-items: flex-start;
-          gap: 15px;
+      body.sidebar-open .sidebar-overlay {
+          display: block;
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 1999;
+      }
+  }
+
+  /* For Phones (The Complete Mobile Redesign) */
+  @media (max-width: 768px) {
+
+      /* --- Main Layout --- */
+      .dashboard-main {
+          padding-bottom: 80px;
       }
 
-      .item-info {
-          width: 100%;
+      .management-section>.tab-nav {
+          display: none;
       }
 
-      .item-actions {
-          width: 100%;
-          justify-content: flex-end;
-          /* Align buttons to the right */
-          gap: 12px;
-          /* Add more space between buttons */
+      /* --- Cleaned-Up Header --- */
+      #sidebar-toggle {
+          display: none;
       }
 
-      .actions-cell {
-          align-self: flex-end;
-          /* Move the '...' dropdown to the end */
+      .dashboard-header {
+          padding: 10px 15px;
       }
 
-      /* --- 4. Refine the Stat Cards --- */
+      .header-brand {
+          display: flex;
+          align-items: center;
+      }
+
+      .brand-logo-mobile {
+          font-family: 'Playfair Display', serif;
+          font-weight: 700;
+          font-size: 1.2rem;
+      }
+
+      .header-user-info {
+          gap: 8px;
+      }
+
+      .header-user-info .btn {
+          padding: 8px;
+      }
+
+      .header-user-info .btn-secondary {
+          display: flex;
+      }
+
+      /* --- Horizontally Scrolling Stats --- */
+      .stats-grid-container {
+          overflow-x: auto;
+          white-space: nowrap;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
+      }
+
+      .stats-grid-container::-webkit-scrollbar {
+          display: none;
+      }
+
+      .stats-grid {
+          display: block;
+      }
+
       .stat-card {
+          display: inline-block;
+          width: 150px;
+          margin-right: 15px;
+          vertical-align: top;
           padding: 15px;
-          /* Reduce padding to save space */
       }
 
       .stat-number {
           font-size: 2rem;
-          /* Make the number slightly smaller */
       }
 
       .stat-label {
           font-size: 0.8rem;
       }
-  }
 
-  /* On very narrow screens, make welcome text visible but shorter */
-  @media (min-width: 480px) and (max-width: 768px) {
-      #admin-welcome {
-          display: inline;
-          max-width: 150px;
-          /* Give it a max width */
-          white-space: nowrap;
-          /* Prevent wrapping */
-          overflow: hidden;
-          /* Hide the overflow */
-          text-overflow: ellipsis;
-          /* Add '...' */
+      /* --- List Item Redesign --- */
+      .item {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 15px;
+      }
+
+      .item-actions {
+          width: 100%;
+          justify-content: flex-end;
+          gap: 12px;
+      }
+
+      .actions-cell {
+          align-self: flex-end;
+      }
+
+      .item-actions .btn {
+          padding: 10px 12px;
+          font-size: 1rem;
+      }
+
+      .item-actions .btn-small span {
+          display: none;
+      }
+
+      .item-actions .btn-small i {
+          margin: 0;
+      }
+
+      .item-info p {
+          overflow-wrap: break-word;
+      }
+
+      /* --- Floating Action Button (FAB) --- */
+      .fab {
+          display: flex;
+          /* This makes it visible on mobile */
+          position: fixed;
+          bottom: 85px;
+          right: 20px;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background: var(--brand-gold-dark);
+          color: white;
+          font-size: 2rem;
+          border: none;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+          cursor: pointer;
+          z-index: 1050;
+          align-items: center;
+          justify-content: center;
+          transition: transform 0.2s ease-out;
+      }
+
+      .fab:active {
+          transform: scale(0.95);
+      }
+
+      /* --- Bottom Tab Bar (Sticky & Glass Effect) --- */
+      .dashboard-content>.tab-nav {
+          display: flex;
+          /* This makes it visible on mobile */
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          justify-content: space-around;
+
+          /* This creates the "glass box" effect */
+          background: var(--header-bg);
+          /* Use a semi-transparent background */
+          -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+
+          border-top: 1px solid var(--border-color);
+          box-shadow: 0 -4px 15px var(--shadow-light);
+          padding: 5px 0;
+          z-index: 1000;
+      }
+
+      .dashboard-content>.tab-nav .tab-btn {
+          flex-direction: column;
+          gap: 4px;
+          font-size: 0.7rem;
+          padding: 8px 12px;
+          border-bottom: none;
+          width: 100%;
+          color: var(--text-muted);
+      }
+
+      .dashboard-content>.tab-nav .tab-btn i {
+          font-size: 1.2rem;
+      }
+
+      .dashboard-content>.tab-nav .tab-btn.active {
+          color: var(--brand-gold-dark);
+          border-top: 2px solid var(--brand-gold-dark);
+          padding-top: 6px;
       }
   }

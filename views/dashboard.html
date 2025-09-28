@@ -10,6 +10,7 @@
     <title>Admin Dashboard - Signature Photography</title>
     <link rel="stylesheet" href="/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
 </head>
 
 <body>
@@ -40,23 +41,21 @@
     <div id="dashboard-content">
 
         <!-- ===== HEADER ===== -->
+
         <header class="dashboard-header">
-            <div class="header-search"></div>
+            <div class="header-brand">
+                <button id="sidebar-toggle" aria-label="Toggle sidebar"><i class="fas fa-bars"></i></button>
+                <span class="brand-logo-mobile">Dashboard</span>
+            </div>
             <div class="header-user-info">
-                <button id="sidebar-toggle" class="btn btn-small" aria-label="Toggle sidebar"><i
-                        class="fas fa-bars"></i></button>
-                <button id="admin-theme-toggle" class="btn btn-small" aria-label="Toggle theme"><i
-                        class="fas fa-moon"></i></button>
-                <span id="admin-welcome">Welcome, Admin</span>
+                <span id="admin-welcome"></span>
 
-                <a href="/" target="_blank" rel="noopener noreferrer" class="btn btn-small btn-secondary">
-                    <i class="fas fa-external-link-alt"></i> Client View
-                </a>
-
-                <button id="header-logout-btn" class="btn btn-small">Logout</button>
+                <button id="admin-theme-toggle" aria-label="Toggle theme"><i class="fas fa-moon"></i></button>
+                <a href="/" target="_blank" class="btn btn-small btn-secondary" aria-label="Client View"><i
+                        class="fas fa-external-link-alt"></i></a>
+                <button id="header-logout-btn" aria-label="Logout"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
-
         <!-- ===== SIDEBAR ===== -->
         <aside class="dashboard-sidebar">
             <div class="sidebar-header">
@@ -139,14 +138,20 @@
                     <div class="stat-number" id="total-selections">0</div>
                     <div class="stat-label">Selections</div>
                 </div>
+                <div class="stats-grid-container">
+                    <div class="stats-grid">
+                    </div>
+                </div>
             </div>
 
             <!-- Management Section with Tabs -->
             <div class="management-section">
                 <nav class="tab-nav">
-                    <button class="tab-btn active" data-tab="galleries"><i class="fas fa-images"></i> Galleries</button>
+                    <button class="tab-btn active" data-tab="galleries"><i class="fas fa-images"></i>
+                        Galleries</button>
                     <button class="tab-btn" data-tab="clients"><i class="fas fa-users"></i> Clients</button>
-                    <button class="tab-btn" data-tab="contacts"><i class="fas fa-address-book"></i> Contacts</button>
+                    <button class="tab-btn" data-tab="contacts"><i class="fas fa-address-book"></i>
+                        Contacts</button>
                 </nav>
 
                 <!-- Galleries Panel -->
@@ -206,11 +211,30 @@
             </div>
 
         </main>
+        <button id="fab-create" class="fab" aria-label="Create new item">+</button>
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="galleries"><i
+                    class="fas fa-images"></i><span>Galleries</span></button>
+            <button class="tab-btn" data-tab="clients"><i class="fas fa-users"></i><span>Clients</span></button>
+            <button class="tab-btn" data-tab="contacts"><i
+                    class="fas fa-address-book"></i><span>Contacts</span></button>
+        </nav>
+
     </div>
     <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <!-- ========= TOAST & MODALS (Unchanged Structure) ========= -->
-
+    <div class="modal" id="create-item-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 class="modal-title" id="create-modal-title">Create</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
     <div class="modal" id="confirm-modal">
         <div class="modal-box">
             <div class="modal-header">

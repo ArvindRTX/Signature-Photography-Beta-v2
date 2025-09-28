@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const createGalleryForm = document.getElementById("create-gallery-form");
   const createClientForm = document.getElementById("create-client-form");
   const toastContainer = document.getElementById("toast-container");
-  const tabNav = document.querySelector(".tab-nav");
+  const allTabNavs = document.querySelectorAll(".tab-nav");
   const themeToggle = document.getElementById("admin-theme-toggle");
   const sidebarToggle = document.getElementById("sidebar-toggle");
   const sidebarOverlay = document.getElementById("sidebar-overlay");
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
               if (type === "clients")
                 return `<div class="item"><div class="item-info"><div><i class="fas fa-user fa-lg" style="color:#c0a062;"></i></div><div><p><strong>${
                   item.name
-                }</strong></p><p style="font-size:0.9rem; color:#666;">Galleries: ${
+                }</strong></p><p class="item-subtext">Galleries: ${
                   item.galleryIds?.length || 0
                 }</p></div></div><div class="actions-cell"><button class="actions-btn" data-action="toggle-dropdown" data-id="${
                   item._id
@@ -375,20 +375,26 @@ document.addEventListener("DOMContentLoaded", () => {
     location.reload();
   };
 
-  if (tabNav) {
-    tabNav.addEventListener("click", (e) => {
+  allTabNavs.forEach((nav) => {
+    nav.addEventListener("click", (e) => {
       const tabButton = e.target.closest(".tab-btn");
       if (!tabButton) return;
+
       const targetTab = tabButton.dataset.tab;
-      tabNav
-        .querySelectorAll(".tab-btn")
-        .forEach((btn) => btn.classList.remove("active"));
-      tabButton.classList.add("active");
+
+      // Update the active state on ALL tab bars to keep them in sync
+      allTabNavs.forEach((navBar) => {
+        navBar.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.tab === targetTab);
+        });
+      });
+
+      // Update the content panels
       document.querySelectorAll(".tab-panel").forEach((panel) => {
         panel.classList.toggle("active", panel.id === `${targetTab}-panel`);
       });
     });
-  }
+  });
 
   logoutBtn.addEventListener("click", (e) => {
     e.preventDefault();
@@ -670,4 +676,24 @@ document.addEventListener("DOMContentLoaded", () => {
       itemToDelete = { type: null, id: null };
     }
   });
+  const fabButton = document.getElementById('fab-create');
+    const bottomTabBar = document.querySelector('.dashboard-content > .nav-tabs'); // Note: Corrected selector if you changed it
+
+    const handleLayoutForScreenSize = () => {
+        if (window.innerWidth > 768) {
+            // On DESKTOP, forcefully hide mobile elements
+            if (fabButton) fabButton.style.display = 'none';
+            if (bottomTabBar) bottomTabBar.style.display = 'none';
+        } else {
+            // On MOBILE, ensure they are visible
+            if (fabButton) fabButton.style.display = 'flex';
+            if (bottomTabBar) bottomTabBar.style.display = 'flex';
+        }
+    };
+
+    // Run the check when the page first loads
+    handleLayoutForScreenSize();
+
+    // Also run the check whenever the browser window is resized
+    window.addEventListener('resize', handleLayoutForScreenSize);
 });
