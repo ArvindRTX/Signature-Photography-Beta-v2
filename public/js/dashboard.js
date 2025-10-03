@@ -84,6 +84,37 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   };
 
+  // --- IMPROVED ERROR HANDLING ---
+  const fetchWithErrorHandling = async (url, options = {}) => {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...getAuthHeaders(),
+          ...options.headers,
+        },
+      });
+
+      if (response.status === 401) {
+        logout();
+        return null;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `Request failed with status ${response.status}`
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("API Error:", error);
+      showToast(error.message || "An error occurred", "error");
+      throw error;
+    }
+  };
+
   // --- RENDER FUNCTIONS ---
   const renderList = (type, { data, total, page, totalPages }) => {
     const singularType = typeMap[type];
@@ -141,41 +172,51 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- API & DATA HANDLING ---
   const fetchStats = async () => {
     try {
-      const res = await fetch("/api/dashboard-stats", {
-        headers: getAuthHeaders(),
+      const stats = await fetchWithErrorHandling("/api/dashboard-stats", {
         cache: "no-cache",
       });
-      if (res.status === 401) return logout();
-      const stats = await res.json();
-      document.getElementById("total-galleries").textContent =
-        stats.totalGalleries;
-      document.getElementById("unassigned-galleries").textContent =
-        stats.unassignedGalleries;
-      document.getElementById("total-clients").textContent = stats.totalClients;
-      document.getElementById("total-selections").textContent =
-        stats.totalSelections;
+
+      if (stats) {
+        const elements = {
+          "total-galleries": stats.totalGalleries,
+          "unassigned-galleries": stats.unassignedGalleries,
+          "total-clients": stats.totalClients,
+          "total-selections": stats.totalSelections,
+        };
+
+        Object.entries(elements).forEach(([id, value]) => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.textContent = value || 0;
+          }
+        });
+      }
     } catch (error) {
-      showToast("Failed to load stats.", "error");
+      console.error("Failed to fetch stats:", error);
     }
   };
 
   const fetchList = async (type) => {
     const singularType = typeMap[type];
     if (!singularType) return;
-    showLoading(`${singularType}-loader`);
+
+    const loaderId = `${singularType}-loader`;
+    showLoading(loaderId);
+
     try {
       const { page, search } = state[type];
-      const res = await fetch(`/api/${type}?page=${page}&search=${search}`, {
-        headers: getAuthHeaders(),
-        cache: "no-cache",
-      });
-      if (res.status === 401) return logout();
-      const result = await res.json();
-      renderList(type, result);
+      const result = await fetchWithErrorHandling(
+        `/api/${type}?page=${page}&search=${encodeURIComponent(search)}`,
+        { cache: "no-cache" }
+      );
+
+      if (result) {
+        renderList(type, result);
+      }
     } catch (error) {
-      showToast(`Failed to load ${type}.`, "error");
+      console.error(`Failed to fetch ${type}:`, error);
     } finally {
-      hideLoading(`${singularType}-loader`);
+      hideLoading(loaderId);
     }
   };
 
@@ -202,28 +243,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const handleFormSubmit = async (url, method, body, form, cb) => {
+  const handleFormSubmit = async (url, method, body, form, callback) => {
     const submitBtn = form.querySelector('button[type="submit"]');
     if (!submitBtn) return;
+
+    // Validate form data
+    const requiredFields = form.querySelectorAll("[required]");
+    let isValid = true;
+
+    requiredFields.forEach((field) => {
+      if (!field.value.trim()) {
+        field.classList.add("error");
+        isValid = false;
+      } else {
+        field.classList.remove("error");
+      }
+    });
+
+    if (!isValid) {
+      showToast("Please fill in all required fields.", "error");
+      return;
+    }
+
     submitBtn.classList.add("loading");
     submitBtn.disabled = true;
+
     try {
-      const res = await fetch(url, {
+      const data = await fetchWithErrorHandling(url, {
         method,
-        headers: getAuthHeaders(),
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || "An unknown error occurred.");
-      showToast(data.message, "success");
-      form.reset();
-      const detailsElement = form.closest("details");
-      if (detailsElement) detailsElement.open = false;
-      hideModal("create-item-modal");
-      if (cb) cb();
+
+      if (data) {
+        showToast(
+          data.message || "Operation completed successfully",
+          "success"
+        );
+        form.reset();
+
+        // Close any open details elements
+        const detailsElement = form.closest("details");
+        if (detailsElement) detailsElement.open = false;
+
+        // Close modal if it exists
+        hideModal("create-item-modal");
+
+        if (callback) callback();
+      }
     } catch (error) {
-      showToast(error.message, "error");
+      console.error("Form submission error:", error);
     } finally {
       submitBtn.classList.remove("loading");
       submitBtn.disabled = false;
@@ -315,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
           url: galleryUrl,
         });
       } catch (err) {
-        /* Share cancelled */
+        // Share cancelled
       }
     } else {
       try {
@@ -327,10 +395,61 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // --- INITIALIZATION & CORE APP LOGIC ---
-  // In public/js/dashboard.js
-  // Replace the entire old function with this one
+  // --- LAYOUT VISIBILITY MANAGEMENT ---
+  const handleLayoutVisibility = () => {
+    const fabButton = document.getElementById("fab-create");
+    const bottomTabBar = document.querySelector(
+      ".dashboard-content > .tab-nav"
+    );
 
+    if (window.innerWidth <= 768) {
+      // On MOBILE, ensure they are visible
+      if (fabButton) {
+        fabButton.style.display = "flex";
+        fabButton.style.visibility = "visible";
+      }
+      if (bottomTabBar) {
+        bottomTabBar.style.display = "flex";
+        bottomTabBar.style.visibility = "visible";
+      }
+    } else {
+      // On DESKTOP, hide mobile elements
+      if (fabButton) {
+        fabButton.style.display = "none";
+      }
+      if (bottomTabBar) {
+        bottomTabBar.style.display = "none";
+      }
+    }
+  };
+
+  // --- SIDEBAR TOGGLE FUNCTIONALITY ---
+  const initializeSidebarToggle = () => {
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.body.classList.toggle("sidebar-open");
+      });
+    }
+
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener("click", () => {
+        document.body.classList.remove("sidebar-open");
+      });
+    }
+
+    // Close sidebar on escape key
+    document.addEventListener("keydown", (e) => {
+      if (
+        e.key === "Escape" &&
+        document.body.classList.contains("sidebar-open")
+      ) {
+        document.body.classList.remove("sidebar-open");
+      }
+    });
+  };
+
+  // --- INITIALIZATION & CORE APP LOGIC ---
   const showDashboard = async () => {
     if (loginView) loginView.style.display = "none";
     if (dashboardContent) dashboardContent.classList.add("visible");
@@ -357,27 +476,51 @@ document.addEventListener("DOMContentLoaded", () => {
     location.reload();
   };
 
+  // --- ADD VALIDATION STYLES ---
+  const addValidationStyles = () => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .form-group input.error,
+      .form-group select.error {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 8px rgba(220, 53, 69, 0.3) !important;
+      }
+      
+      .dashboard-initialized .dashboard-main {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      
+      .dashboard-main {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+    `;
+    document.head.appendChild(style);
+  };
+
+  // --- THEME AND UI INITIALIZATION ---
   applyAdminTheme(getAdminTheme());
+  addValidationStyles();
+
   if (themeToggle)
     themeToggle.addEventListener("click", () => {
       const next = getAdminTheme() === "dark" ? "light" : "dark";
       localStorage.setItem("adminTheme", next);
       applyAdminTheme(next);
     });
-  if (sidebarToggle)
-    sidebarToggle.addEventListener("click", () =>
-      document.body.classList.toggle("sidebar-open")
-    );
-  if (sidebarOverlay)
-    sidebarOverlay.addEventListener("click", () =>
-      document.body.classList.remove("sidebar-open")
-    );
+
+  // Initialize sidebar toggle
+  initializeSidebarToggle();
+
   if (logoutBtn)
     logoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
       logout();
     });
 
+  // --- TAB NAVIGATION ---
   allTabNavs.forEach((nav) => {
     nav.addEventListener("click", (e) => {
       const tabButton = e.target.closest(".tab-btn");
@@ -398,6 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // --- LOGIN FORM ---
   if (loginForm)
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -424,6 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+  // --- GLOBAL EVENT DELEGATION ---
   document.addEventListener("click", (e) => {
     const toggleButton = e.target.closest(".password-toggle");
     if (toggleButton) {
@@ -518,6 +663,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // --- SEARCH FUNCTIONALITY ---
   Object.keys(typeMap).forEach((type) => {
     const searchInput = document.getElementById(`${typeMap[type]}-search`);
     if (searchInput)
@@ -531,6 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
   });
 
+  // --- MODAL CONTROLS ---
   document
     .querySelectorAll(".modal .close-btn, #confirm-no")
     .forEach((btn) =>
@@ -538,6 +685,8 @@ document.addEventListener("DOMContentLoaded", () => {
         hideModal(e.target.closest(".modal").id)
       )
     );
+
+  // --- CREATE GALLERY FORM ---
   if (createGalleryForm)
     createGalleryForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -557,6 +706,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       );
     });
+
+  // --- CREATE CLIENT FORM ---
   if (createClientForm)
     createClientForm.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -576,22 +727,84 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       );
     });
+
+  // --- EDIT CLIENT FORM ---
   document
     .getElementById("edit-client-form")
     ?.addEventListener("submit", async (e) => {
-      e.preventDefault(); /* ... */
+      e.preventDefault();
+      const form = e.target;
+      const clientId = document.getElementById("edit-client-id").value;
+      const formData = {
+        name: document.getElementById("edit-client-name").value,
+        username: document.getElementById("edit-client-username").value,
+      };
+      const password = document.getElementById("edit-client-password").value;
+      if (password.trim()) formData.password = password;
+
+      handleFormSubmit(
+        `/api/clients/${clientId}`,
+        "PUT",
+        formData,
+        form,
+        () => {
+          fetchList("clients");
+          fetchAllClientAndGalleryData();
+          hideModal("edit-client-modal");
+        }
+      );
     });
+
+  // --- ASSIGN GALLERY FORM ---
   document
     .getElementById("assign-gallery-form")
     ?.addEventListener("submit", async (e) => {
-      e.preventDefault(); /* ... */
+      e.preventDefault();
+      const form = e.target;
+      const clientId = document.getElementById("assign-client-id").value;
+      const checkboxes = form.querySelectorAll(
+        'input[name="galleryIds"]:checked'
+      );
+      const galleryIds = Array.from(checkboxes).map((cb) => cb.value);
+
+      handleFormSubmit(
+        `/api/clients/${clientId}/assign`,
+        "PUT",
+        { galleryIds },
+        form,
+        () => {
+          fetchList("clients");
+          fetchAllClientAndGalleryData();
+          hideModal("assign-gallery-modal");
+        }
+      );
     });
+
+  // --- DELETE CONFIRMATION ---
   document
     .getElementById("confirm-yes")
     ?.addEventListener("click", async () => {
-      /* ... */
+      if (!itemToDelete.type || !itemToDelete.id) return;
+
+      try {
+        await fetchWithErrorHandling(
+          `/api/${itemToDelete.type}s/${itemToDelete.id}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        fetchList(`${itemToDelete.type}s`);
+        fetchStats();
+        fetchAllClientAndGalleryData();
+        hideModal("confirm-modal");
+        itemToDelete = { type: null, id: null };
+      } catch (error) {
+        console.error("Delete operation failed:", error);
+      }
     });
 
+  // --- FAB (FLOATING ACTION BUTTON) FOR MOBILE ---
   if (
     fabCreate &&
     createItemModal &&
@@ -615,25 +828,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const fabButton = document.getElementById("fab-create");
-  // ✅ CORRECTED SELECTOR HERE
-  const bottomTabBar = document.querySelector(".dashboard-content > .tab-nav");
-
-  const handleLayoutVisibility = () => {
-    if (window.innerWidth > 768) {
-      // On DESKTOP, forcefully hide mobile elements
-      if (fabButton) fabButton.style.display = "none";
-      if (bottomTabBar) bottomTabBar.style.display = "none";
-    } else {
-      // On MOBILE, ensure they are visible
-      if (fabButton) fabButton.style.display = "flex";
-      if (bottomTabBar) bottomTabBar.style.display = "flex";
-    }
-  };
-
-  // Run this check when the page first loads
+  // --- LAYOUT VISIBILITY MANAGEMENT ---
+  // Run the layout visibility check when the page loads
   handleLayoutVisibility();
 
-  // Also run the check whenever the browser window is resized
-  window.addEventListener("resize", handleLayoutVisibility);
+  // Listen for window resize events with debouncing
+  let resizeTimeout;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(handleLayoutVisibility, 250);
+  });
+
+  // Add CSS class for proper initialization
+  document.body.classList.add("dashboard-initialized");
+
+  // --- FINAL INITIALIZATION ---
+  // Check authentication and show appropriate view
+  if (getToken()) {
+    showDashboard();
+  } else {
+    // Ensure login view is visible
+    if (loginView) loginView.style.display = "flex";
+    if (dashboardContent) dashboardContent.classList.remove("visible");
+  }
 });

@@ -875,9 +875,7 @@
       }
   }
 
-  .dashboard-content>.tab-nav {
-      display: none;
-  }
+  
 
   .item-subtext {
       font-size: 0.9rem;
@@ -940,10 +938,7 @@
       }
 
       /* The dark overlay to cover the main content */
-      .sidebar-overlay {
-          display: none;
-      }
-
+      
       body.sidebar-open .sidebar-overlay {
           display: block;
           position: fixed;
@@ -1131,3 +1126,21 @@
           padding-top: 6px;
       }
   }
+  /* In public/css/dashboard.css */
+/* Add this single block to the very end of the file. */
+
+@media (min-width: 1025px) {
+    /* On desktop screens, forcefully hide all mobile-only elements */
+    .fab,
+    .dashboard-content > .tab-nav,
+    .brand-logo-mobile,
+    #sidebar-toggle {
+        display: none !important;
+    }
+
+    /* Ensure the desktop sidebar is always visible */
+    .dashboard-sidebar {
+        transform: translateX(0) !important;
+        position: sticky !important;
+    }
+}
