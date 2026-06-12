@@ -3,8 +3,8 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const compression = require("compression");
-const { connectDB, getDB } = require("./config/database");
-const { drive, twilioClient } = require("./config/services");
+const { supabase } = require("./config/database");
+const { drive } = require("./config/services");
 
 const indexRoutes = require("./routes/index");
 const authRoutes = require("./routes/auth");
@@ -34,9 +34,8 @@ app.use(
 
 // Make db and services available to routes
 app.use((req, res, next) => {
-  req.db = getDB();
+  req.supabase = supabase;
   req.drive = drive;
-  req.twilioClient = twilioClient;
   next();
 });
 
@@ -52,8 +51,7 @@ app.use((req, res) => {
 
 async function startServer() {
   try {
-    await connectDB();
-    console.log("✅ Connected successfully to MongoDB");
+    console.log("✅ Supabase client initialized");
     app.listen(port, () => {
       console.log(`🚀 Server is running at http://localhost:${port}`);
       console.log(

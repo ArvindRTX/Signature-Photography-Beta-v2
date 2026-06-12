@@ -6,7 +6,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPage = 1;
   let totalPages = 1;
   let isLoading = false;
-  const gallerySlug = window.location.pathname.split("/").pop();
+  let selectionLimit = null;
+
+  // --- QUERY PARAM AUTO-LOGIN PARSING ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenParam = urlParams.get("token");
+  const nameParam = urlParams.get("name");
+  if (tokenParam) {
+    sessionStorage.setItem("clientToken", tokenParam);
+    if (nameParam) {
+      sessionStorage.setItem("clientName", decodeURIComponent(nameParam));
+    }
+    // Scrub credentials from address bar
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  const pathSegments = window.location.pathname.split("/").filter(Boolean);
+  const gallerySlug = pathSegments[pathSegments.length - 1] || "";
 
   // --- ELEMENT SELECTORS ---
   const clientLoginView = document.getElementById("client-login-view");
@@ -32,6 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
     "lightbox-selection-checkbox"
   );
   const lightboxLoader = document.getElementById("lightbox-loader");
+  const selectedOnlyToggle = document.getElementById("selected-only-toggle");
+  const lightboxPhotoNote = document.getElementById("lightbox-photo-note");
+  const selectionLimitContainer = document.getElementById("selection-limit-container");
+  const selectionLimitStatus = document.getElementById("selection-limit-status");
 
   // --- OBSERVER FOR LAZY LOADING IMAGES ---
   const imageObserver = new IntersectionObserver(
@@ -94,6 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- API & DATA FETCHING ---
   const fetchPhotos = async () => {
+    if (selectedOnlyToggle && selectedOnlyToggle.checked) return;
     if (isLoading || (currentPage > totalPages && totalPages > 1)) return;
     isLoading = true;
     if (loadingSentinel)
@@ -106,14 +127,22 @@ document.addEventListener("DOMContentLoaded", () => {
           headers: { Authorization: `Bearer ${getClientToken()}` },
         }
       );
-      if (res.status === 401) {
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData.error || "Access Denied / Session Expired";
+        window.showToast(errMsg, "error");
         sessionStorage.clear();
-        window.location.reload();
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2500);
         return;
       }
       if (!res.ok) throw new Error("Failed to fetch gallery data.");
       const data = await res.json();
       totalPages = data.totalPages;
+      if (data.selectionLimit) {
+        selectionLimit = parseInt(data.selectionLimit) || null;
+      }
       allPhotos.push(...data.photos);
       renderPhotos(data.photos);
       currentPage++;
@@ -130,15 +159,50 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // --- RENDER FUNCTIONS ---
+  const setupColumns = () => {
+    if (!photoGallery) return;
+    photoGallery.innerHTML = "";
+    // 3 columns on desktop, 2 columns on mobile/tablet devices
+    const colCount = window.innerWidth <= 768 ? 2 : 3;
+    for (let i = 0; i < colCount; i++) {
+      const col = document.createElement("div");
+      col.className = "gallery-column";
+      photoGallery.appendChild(col);
+    }
+  };
+
   const renderPhotos = (photos) => {
-    const fragment = document.createDocumentFragment();
+    const columns = photoGallery.querySelectorAll(".gallery-column");
+    if (columns.length === 0) return;
+
+    // Track column heights based on already appended children's aspect ratios
+    const colHeights = Array.from(columns).map((col) => {
+      let height = 0;
+      col.querySelectorAll(".photo-container").forEach((c) => {
+        const arStr = c.style.aspectRatio;
+        if (arStr) {
+          const parts = arStr.split("/");
+          const w = parseFloat(parts[0]);
+          const h = parseFloat(parts[1]);
+          if (w && h) {
+            height += h / w; // Normalized height contribution
+          }
+        }
+      });
+      return height;
+    });
+
     photos.forEach((photo) => {
       const container = document.createElement("div");
       container.className = "photo-container";
       container.dataset.photoId = photo.id;
       container.dataset.photoName = photo.name;
-      const loader = document.createElement("div");
-      loader.className = "loader";
+      
+      // Reserve aspect ratio space to prevent page layout jumps
+      const width = photo.width || 400;
+      const height = photo.height || 300;
+      container.style.aspectRatio = `${width} / ${height}`;
+
       const bgImage = document.createElement("img");
       bgImage.className = "bg-image";
       const mainImage = document.createElement("img");
@@ -152,11 +216,23 @@ document.addEventListener("DOMContentLoaded", () => {
       };
       const checkbox = document.createElement("div");
       checkbox.className = "selection-checkbox";
-      container.append(loader, bgImage, mainImage, checkbox);
-      fragment.appendChild(container);
+      container.append(bgImage, mainImage, checkbox);
+
+      // Find the shortest column index
+      let shortestColIndex = 0;
+      let minHeight = colHeights[0];
+      for (let i = 1; i < colHeights.length; i++) {
+        if (colHeights[i] < minHeight) {
+          minHeight = colHeights[i];
+          shortestColIndex = i;
+        }
+      }
+
+      columns[shortestColIndex].appendChild(container);
+      colHeights[shortestColIndex] += height / width;
+
       imageObserver.observe(container);
     });
-    if (photoGallery) photoGallery.appendChild(fragment);
   };
 
   const updateStickyButtonVisibility = () => {
@@ -171,6 +247,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalCountEl = document.getElementById("selection-count-modal");
     if (modalCountEl) modalCountEl.textContent = count;
 
+    // Render Quota Progress Badge
+    if (selectionLimitContainer && selectionLimitStatus) {
+      if (selectionLimit !== null && selectionLimit > 0) {
+        selectionLimitContainer.style.display = "block";
+        selectionLimitStatus.textContent = `${count} / ${selectionLimit}`;
+        
+        // Visual warning updates
+        if (count >= selectionLimit) {
+          selectionLimitContainer.style.color = "var(--brand-gold-dark)";
+          if (count > selectionLimit) {
+            selectionLimitContainer.style.color = "#dc3545"; // Warning red if over limit
+          }
+        } else {
+          selectionLimitContainer.style.color = "var(--text-color-secondary)";
+        }
+      } else {
+        selectionLimitContainer.style.display = "none";
+      }
+    }
+
     document.querySelectorAll(".photo-container").forEach((el) => {
       el.classList.toggle(
         "selected",
@@ -179,11 +275,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     if (currentLightboxIndex > -1) {
       const currentPhoto = allPhotos[currentLightboxIndex];
+      const selectedItem = selectedPhotos.find((p) => p.id === currentPhoto.id);
       if (lightboxCheckbox) {
-        lightboxCheckbox.classList.toggle(
-          "selected",
-          selectedPhotos.some((p) => p.id === currentPhoto.id)
-        );
+        lightboxCheckbox.classList.toggle("selected", !!selectedItem);
+      }
+      if (lightboxPhotoNote) {
+        lightboxPhotoNote.value = selectedItem ? (selectedItem.note || "") : "";
       }
     }
     updateStickyButtonVisibility();
@@ -218,6 +315,23 @@ document.addEventListener("DOMContentLoaded", () => {
         lightboxImg.style.opacity = "1";
       };
       lightboxImg.src = `https://drive.google.com/thumbnail?id=${photo.id}&sz=w1920`;
+
+      // Pre-fetch adjacent images for seamless slideshow UX
+      if (allPhotos.length > 1) {
+        const nextIdx = (currentLightboxIndex + 1) % allPhotos.length;
+        const nextPhoto = allPhotos[nextIdx];
+        if (nextPhoto) {
+          const preloadNext = new Image();
+          preloadNext.src = `https://drive.google.com/thumbnail?id=${nextPhoto.id}&sz=w1920`;
+        }
+
+        const prevIdx = (currentLightboxIndex - 1 + allPhotos.length) % allPhotos.length;
+        const prevPhoto = allPhotos[prevIdx];
+        if (prevPhoto) {
+          const preloadPrev = new Image();
+          preloadPrev.src = `https://drive.google.com/thumbnail?id=${prevPhoto.id}&sz=w1920`;
+        }
+      }
     }
     updateSelectionUI();
   };
@@ -233,13 +347,36 @@ document.addEventListener("DOMContentLoaded", () => {
     updateLightboxImage();
   };
 
-  const toggleSelection = (photoId, photoName) => {
-    const photo = { id: photoId, name: photoName };
+  const toggleSelection = (photoId, photoName, note = "") => {
+    const photo = { id: photoId, name: photoName, note: note };
     const index = selectedPhotos.findIndex((p) => p.id === photo.id);
     if (index > -1) {
       selectedPhotos.splice(index, 1);
     } else {
+      // Enforce selection limit
+      if (selectionLimit !== null && selectionLimit > 0 && selectedPhotos.length >= selectionLimit) {
+        window.showToast(`Selection limit of ${selectionLimit} photos reached! Please remove another photo first.`, "error");
+        return;
+      }
       selectedPhotos.push(photo);
+    }
+    updateSelectionUI();
+  };
+
+  const updatePhotoNote = (photoId, photoName, note) => {
+    const index = selectedPhotos.findIndex((p) => p.id === photoId);
+    if (index > -1) {
+      selectedPhotos[index].note = note;
+    } else {
+      if (note.trim() !== "") {
+        // Enforce selection limit on auto-select
+        if (selectionLimit !== null && selectionLimit > 0 && selectedPhotos.length >= selectionLimit) {
+          window.showToast(`Selection limit of ${selectionLimit} photos reached! Could not select photo.`, "error");
+          if (lightboxPhotoNote) lightboxPhotoNote.value = "";
+          return;
+        }
+        selectedPhotos.push({ id: photoId, name: photoName, note: note });
+      }
     }
     updateSelectionUI();
   };
@@ -260,7 +397,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (name.length < 2) errors.push("Name must be at least 2 characters");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       errors.push("Please enter a valid email address");
-    if (!/^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/\s/g, "")))
+    const cleanPhone = phone.replace(/[^\d+]/g, "");
+    if (!/^\+?\d{7,15}$/.test(cleanPhone))
       errors.push("Please enter a valid phone number");
     return errors;
   };
@@ -387,6 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
       headerSubtitle.textContent =
         "Select your favorite photos for editing and final delivery.";
     }
+    setupColumns();
     fetchPhotos();
   };
 
@@ -411,7 +550,10 @@ document.addEventListener("DOMContentLoaded", () => {
     lightboxPrev.addEventListener("click", showPrevImage);
     lightboxCheckbox.addEventListener("click", () => {
       const current = allPhotos[currentLightboxIndex];
-      if (current) toggleSelection(current.id, current.name);
+      if (current) {
+        const noteVal = lightboxPhotoNote ? lightboxPhotoNote.value : "";
+        toggleSelection(current.id, current.name, noteVal);
+      }
     });
     // Keyboard navigation for lightbox
     document.addEventListener("keydown", (e) => {
@@ -419,6 +561,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Escape") closeLightbox();
         if (e.key === "ArrowRight") showNextImage();
         if (e.key === "ArrowLeft") showPrevImage();
+      }
+    });
+  }
+
+  if (lightboxPhotoNote) {
+    lightboxPhotoNote.addEventListener("input", () => {
+      if (currentLightboxIndex > -1) {
+        const current = allPhotos[currentLightboxIndex];
+        updatePhotoNote(current.id, current.name, lightboxPhotoNote.value);
+      }
+    });
+  }
+
+  if (selectedOnlyToggle) {
+    selectedOnlyToggle.addEventListener("change", (e) => {
+      if (photoGallery) {
+        photoGallery.classList.toggle("filter-selected-only", e.target.checked);
       }
     });
   }
@@ -478,6 +637,22 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     }
+  });
+
+  // Handle debounced re-layout on window resize if column count changes
+  let resizeTimeout;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      if (galleryContainer && galleryContainer.style.display === "block" && allPhotos.length > 0) {
+        const currentCols = photoGallery.querySelectorAll(".gallery-column").length;
+        const targetCols = window.innerWidth <= 768 ? 2 : 3;
+        if (currentCols !== targetCols) {
+          setupColumns();
+          renderPhotos(allPhotos);
+        }
+      }
+    }, 150);
   });
 
   if (getClientToken() && gallerySlug) {

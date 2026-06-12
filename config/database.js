@@ -1,25 +1,16 @@
-const { MongoClient } = require("mongodb");
+const { createClient } = require("@supabase/supabase-js");
 
-const client = new MongoClient(process.env.MONGO_URI);
-let db;
-
-async function connectDB() {
-    if (db) return db;
-    try {
-        await client.connect();
-        db = client.db("photo-gallery-db");
-        return db;
-    } catch (err) {
-        console.error("Failed to connect to MongoDB", err);
-        throw err;
-    }
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+    console.error("❌ ERROR: SUPABASE_URL or SUPABASE_KEY is not defined in the environment variables!");
+    console.error("Please ensure you have a .env file in the root directory with these variables defined.");
+    process.exit(1);
 }
 
-function getDB() {
-    if (!db) {
-        throw new Error("Database not initialized! Call connectDB first.");
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false
     }
-    return db;
-}
+});
 
-module.exports = { connectDB, getDB };
+module.exports = { supabase };

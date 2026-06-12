@@ -15,11 +15,13 @@ const extractFolderIdFromUrl = (url) => {
     return null;
 }
 
-const createSlug = (name) =>
-    name
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
+const createSlug = (name) => {
+    const slug = name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
+    return slug || Math.random().toString(36).substring(2, 9);
+};
 
 module.exports = {
     extractFolderIdFromUrl,

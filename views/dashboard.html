@@ -8,7 +8,8 @@
         content="Admin Dashboard - Signature Photography management portal for galleries, clients, and submissions.">
     <meta name="robots" content="noindex, nofollow">
     <title>Admin Dashboard - Signature Photography</title>
-    <link rel="stylesheet" href="/css/dashboard.css?v=1.2">
+    <link rel="stylesheet" href="/css/dashboard.css?v=1.5">
+    <link rel="stylesheet" href="/css/flow.css?v=1.4">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
 </head>
@@ -62,9 +63,13 @@
                 <a href="/dashboard" class="brand-logo">Signature Photo</a>
             </div>
 
+            <div class="sidebar-label">Quick Actions</div>
+
             <div class="sidebar-section">
                 <details>
-                    <summary>Create Gallery</summary>
+                    <summary>
+                        <span class="summary-title"><i class="fas fa-folder-plus"></i> Create Gallery</span>
+                    </summary>
                     <div class="sidebar-form-container">
                         <form id="create-gallery-form">
                             <div class="form-group">
@@ -81,6 +86,10 @@
                                     <option value="">-- No Client --</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label for="gallery-limit">Selection Limit (Optional)</label>
+                                <input type="number" id="gallery-limit" min="1" placeholder="e.g. 50">
+                            </div>
                             <button type="submit" class="btn btn-primary">
                                 <span class="btn-text">Create Gallery</span>
                             </button>
@@ -90,7 +99,9 @@
             </div>
             <div class="sidebar-section">
                 <details>
-                    <summary>Create Client</summary>
+                    <summary>
+                        <span class="summary-title"><i class="fas fa-user-plus"></i> Create Client</span>
+                    </summary>
                     <div class="sidebar-form-container">
                         <form id="create-client-form">
                             <div class="form-group">
@@ -120,42 +131,61 @@
 
         <!-- ===== MAIN CONTENT ===== -->
         <main class="dashboard-main">
-            <!-- Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="total-galleries">0</div>
-                    <div class="stat-label">Total Galleries</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="unassigned-galleries">0</div>
-                    <div class="stat-label">Unassigned</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="total-clients">0</div>
-                    <div class="stat-label">Clients</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="total-selections">0</div>
-                    <div class="stat-label">Selections</div>
-                </div>
-                <div class="stats-grid-container">
-                    <div class="stats-grid">
-                    </div>
-                </div>
-            </div>
-
             <!-- Management Section with Tabs -->
             <div class="management-section">
                 <nav class="tab-nav">
-                    <button class="tab-btn active" data-tab="galleries"><i class="fas fa-images"></i>
-                        Galleries</button>
+                    <button class="tab-btn active" data-tab="flow"><i class="fas fa-project-diagram"></i> Visual Flow</button>
+                    <button class="tab-btn" data-tab="galleries"><i class="fas fa-images"></i> Galleries</button>
                     <button class="tab-btn" data-tab="clients"><i class="fas fa-users"></i> Clients</button>
-                    <button class="tab-btn" data-tab="contacts"><i class="fas fa-address-book"></i>
-                        Contacts</button>
+                    <button class="tab-btn" data-tab="contacts"><i class="fas fa-address-book"></i> Contacts</button>
                 </nav>
 
+                <!-- Flow Panel -->
+                <div id="flow-panel" class="tab-panel active">
+                    <div class="section-header">
+                        <div class="flow-actions" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                            <button class="btn btn-primary btn-small" id="flow-add-client-btn"><i class="fas fa-plus"></i> Add Client Node</button>
+                            <button class="btn btn-primary btn-small" id="flow-add-gallery-btn"><i class="fas fa-plus"></i> Add Gallery Node</button>
+                            <button class="btn btn-primary btn-small" id="flow-deploy-btn" style="background: linear-gradient(135deg, #28a745, #218838); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);"><i class="fas fa-cloud-upload-alt"></i> Deploy Flow</button>
+                            <button class="btn btn-secondary btn-small" id="flow-refresh-btn"><i class="fas fa-sync-alt"></i> Refresh Board</button>
+                            <div class="flow-search-container" style="position: relative; display: flex; align-items: center;">
+                                <i class="fas fa-search" style="position: absolute; left: 12px; color: var(--text-color-secondary); font-size: 0.85rem;"></i>
+                                <input type="text" id="flow-node-search" placeholder="Search node..." style="padding: 6px 12px 6px 28px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--input-text); font-size: 0.85rem; width: 140px; transition: all 0.3s ease;">
+                            </div>
+                            <span id="flow-unsaved-badge" class="flow-status-badge" style="display: none;">
+                                <span class="pulse-dot"></span> Unsaved Changes
+                            </span>
+                        </div>
+                        <div class="flow-tip" style="font-size: 0.85rem; color: var(--text-color-secondary); display: flex; align-items: center; gap: 6px;"><i class="fas fa-info-circle" style="color: var(--brand-gold);"></i> Drag nodes to move. Drag line from Client Output to Gallery Input to connect. Scroll or use controls to zoom. Drag canvas space to pan.</div>
+                    </div>
+                    <div class="flow-canvas-container" id="flow-canvas-container">
+                        <!-- Canvas Loader Overlay -->
+                        <div class="list-loader show" id="flow-loader">
+                            <div class="spinner" style="width: 40px; height: 40px; border-width: 4px;"></div>
+                        </div>
+
+                        <!-- Floating Zoom Controls -->
+                        <div class="flow-zoom-controls">
+                            <button id="flow-zoom-in-btn" class="flow-zoom-btn" title="Zoom In"><i class="fas fa-plus"></i></button>
+                            <button id="flow-zoom-value" class="flow-zoom-val-btn" title="Reset Zoom">100%</button>
+                            <button id="flow-zoom-out-btn" class="flow-zoom-btn" title="Zoom Out"><i class="fas fa-minus"></i></button>
+                        </div>
+                        
+                        <!-- Floating Minimap -->
+                        <div class="flow-minimap" id="flow-minimap">
+                            <div class="minimap-viewport" id="minimap-viewport"></div>
+                            <!-- Node dots will be spawned here dynamically -->
+                        </div>
+
+                        <div class="flow-canvas" id="flow-canvas">
+                            <svg class="flow-svg" id="flow-svg"></svg>
+                            <!-- Nodes will be spawned here -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Galleries Panel -->
-                <div id="galleries-panel" class="tab-panel active">
+                <div id="galleries-panel" class="tab-panel">
                     <div class="section-header">
                         <div class="search-box">
                             <input type="text" id="gallery-search" placeholder="Search galleries...">
@@ -210,6 +240,37 @@
                 </div>
             </div>
 
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-images"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="total-galleries">0</div>
+                        <div class="stat-label">Total Galleries</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-link-slash"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="unassigned-galleries">0</div>
+                        <div class="stat-label">Unassigned</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="total-clients">0</div>
+                        <div class="stat-label">Clients</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper"><i class="fas fa-check-double"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-number" id="total-selections">0</div>
+                        <div class="stat-label">Selections</div>
+                    </div>
+                </div>
+            </div>
         </main>
         <button id="fab-create" class="fab" aria-label="Create new item">+</button>
 
@@ -320,8 +381,18 @@
                         class="btn-text">Close</span></button></div>
         </div>
     </div>
+    <!-- ========= CUSTOM WORKSPACE CONTEXT MENU ========= -->
+    <div id="flow-context-menu" class="flow-context-menu" style="display: none;">
+        <ul class="context-menu-list">
+            <li class="context-menu-item" id="ctx-add-client"><i class="fas fa-user-plus"></i> Add Client Node</li>
+            <li class="context-menu-item" id="ctx-add-gallery"><i class="fas fa-folder-plus"></i> Add Gallery Node</li>
+            <li class="context-menu-item" id="ctx-delete-node"><i class="fas fa-trash-alt"></i> Delete Node</li>
+        </ul>
+    </div>
+
     <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
     <script src="/js/dashboard.js"></script>
+    <script src="/js/flow.js?v=1.4"></script>
 </body>
 
 </html>

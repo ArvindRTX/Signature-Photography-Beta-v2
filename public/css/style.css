@@ -1,45 +1,46 @@
 :root {
-    --bg-color: #f8f7f5;
-    --text-color-primary: #2d2d2d;
-    --text-color-secondary: #555555;
-    --brand-gold: #c0a062;
-    --brand-gold-dark: #b59150;
-    --header-bg: rgba(255, 255, 255, 0.8);
-    --surface-bg: rgba(255, 255, 255, 0.7);
-    --surface-accent-bg: #f5f3f0;
-    --footer-bg: #252525;
-    --footer-text: #a0a0a0;
-    --border-color: rgba(0, 0, 0, 0.08);
-    --input-bg: #fff;
-    --input-border: rgba(0, 0, 0, 0.15);
-    --input-text: #2d2d2d;
-    --photo-container-bg: #e9e9e9;
-    --hover-bg: #f0ebe5;
-    --shadow-color: rgba(90, 90, 90, 0.1);
-    --animated-bg-1: rgba(192, 160, 98, 0.3);
-    --animated-bg-2: rgba(255, 255, 255, 0.6);
-    --animated-bg-3: rgba(192, 160, 98, 0.25);
+    --bg-color: #fdfdfb;
+    --text-color-primary: #1c1c1e;
+    --text-color-secondary: #5e5e62;
+    --brand-gold: #c5a059;
+    --brand-gold-dark: #a8833c;
+    --header-bg: rgba(253, 253, 251, 0.75);
+    --surface-bg: rgba(253, 253, 251, 0.65);
+    --surface-accent-bg: rgba(240, 237, 230, 0.5);
+    --footer-bg: #121212;
+    --footer-text: #8e8e93;
+    --border-color: rgba(197, 160, 89, 0.12);
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --input-border: rgba(0, 0, 0, 0.08);
+    --input-text: #1c1c1e;
+    --photo-container-bg: #eaeae7;
+    --hover-bg: rgba(197, 160, 89, 0.08);
+    --shadow-color: rgba(90, 80, 70, 0.06);
+    --animated-bg-1: rgba(197, 160, 89, 0.15);
+    --animated-bg-2: rgba(255, 255, 255, 0.8);
+    --animated-bg-3: rgba(240, 237, 230, 0.5);
 }
 
 body.dark-mode {
-    --bg-color: #121212;
-    --text-color-primary: #e0e0e0;
-    --text-color-secondary: #a0a0a0;
-    --brand-gold: #c9ab76;
-    --header-bg: rgba(18, 18, 18, 0.75);
-    --surface-bg: rgba(28, 28, 30, 0.75);
-    --surface-accent-bg: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), radial-gradient(circle, rgba(181, 145, 80, 0.1), transparent 70%);
-    --footer-bg: #161616;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --input-bg: rgba(0, 0, 0, 0.2);
-    --input-border: rgba(255, 255, 255, 0.2);
-    --input-text: #e0e0e0;
-    --photo-container-bg: #2a2a2a;
-    --hover-bg: rgba(255, 255, 255, 0.05);
-    --shadow-color: rgba(0, 0, 0, 0.2);
-    --animated-bg-1: rgba(181, 145, 80, 0.2);
-    --animated-bg-2: rgba(200, 200, 200, 0.2);
-    --animated-bg-3: rgba(181, 145, 80, 0.15);
+    --bg-color: #0b0b0d;
+    --text-color-primary: #f0f0f5;
+    --text-color-secondary: #8e8e93;
+    --brand-gold: #dcb36c;
+    --brand-gold-dark: #b89248;
+    --header-bg: rgba(11, 11, 13, 0.75);
+    --surface-bg: rgba(20, 20, 24, 0.7);
+    --surface-accent-bg: rgba(30, 30, 36, 0.4);
+    --footer-bg: #09090b;
+    --border-color: rgba(220, 179, 108, 0.08);
+    --input-bg: rgba(10, 10, 12, 0.5);
+    --input-border: rgba(255, 255, 255, 0.08);
+    --input-text: #f0f0f5;
+    --photo-container-bg: #1c1c1e;
+    --hover-bg: rgba(220, 179, 108, 0.06);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --animated-bg-1: rgba(184, 146, 72, 0.12);
+    --animated-bg-2: rgba(20, 20, 26, 0.8);
+    --animated-bg-3: rgba(14, 14, 18, 0.7);
 }
 
 * {
@@ -471,10 +472,26 @@ body.dark-mode #login-message-area {
 }
 
 .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 30px;
+    display: flex;
+    gap: 25px;
     margin-bottom: 80px;
+    align-items: flex-start;
+}
+
+.gallery-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        gap: 15px;
+    }
+    .gallery-column {
+        gap: 15px;
+    }
 }
 
 .loader {
@@ -505,37 +522,62 @@ body.dark-mode .loader {
 
 .photo-container {
     position: relative;
-    aspect-ratio: 4/3;
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 2px solid transparent;
     box-shadow: 0 10px 30px var(--shadow-color);
     background-color: var(--photo-container-bg);
+    width: 100%;
+    display: block;
+    
+    /* Animation entry logic */
+    opacity: 0;
+    transform: scale(0.95) translateY(15px);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.3s ease, 
+                box-shadow 0.3s ease;
 }
 
-.photo-container .bg-image,
-.photo-container .main-image {
+.photo-container.loaded {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+@keyframes skeletonShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.photo-container:not(.loaded) {
+    background: linear-gradient(90deg, var(--photo-container-bg) 25%, var(--hover-bg) 50%, var(--photo-container-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s infinite linear;
+}
+
+.photo-container .bg-image {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    transition: opacity 0.6s ease-in-out, filter 0.4s ease;
-}
-
-.photo-container .bg-image {
     object-fit: cover;
-    filter: blur(10px) brightness(0.95);
-    transform: scale(1.1);
+    filter: blur(15px) brightness(0.95);
+    transform: scale(1.05);
+    z-index: 1;
     opacity: 0;
+    transition: opacity 0.5s ease-in-out, filter 0.4s ease;
 }
 
 .photo-container .main-image {
-    object-fit: contain;
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
     z-index: 2;
     opacity: 0;
+    transition: opacity 0.5s ease-in-out;
 }
 
 .photo-container.loaded .loader {
@@ -584,9 +626,21 @@ body.dark-mode .photo-container.selected {
     filter: grayscale(20%) brightness(1) blur(10px);
 }
 
-body.dark-mode .photo-container.selected .main-image,
+/* Fix dark mode selected grayscale styling overrides */
+body.dark-mode .photo-container.selected .main-image {
+    filter: grayscale(100%) brightness(0.95);
+}
+
 body.dark-mode .photo-container.selected .bg-image {
-    filter: brightness(1.1);
+    filter: grayscale(100%) brightness(0.95) blur(10px);
+}
+
+body.dark-mode .photo-container.selected:hover .main-image {
+    filter: grayscale(20%) brightness(1.1);
+}
+
+body.dark-mode .photo-container.selected:hover .bg-image {
+    filter: grayscale(20%) brightness(1.1) blur(10px);
 }
 
 .selection-checkbox {
@@ -1101,58 +1155,7 @@ body.lightbox-active .sticky-submit-btn {
     padding: 5px;
 }
 
-/* In public/css/style.css */
-
-.photo-container {
-    position: relative;
-    aspect-ratio: 4/3;
-    border-radius: 12px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 2px solid transparent;
-    box-shadow: 0 10px 30px var(--shadow-color);
-    background-color: var(--photo-container-bg);
-}
-
-.photo-container .bg-image,
-.photo-container .main-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* This transition creates the smooth fade-in */
-    transition: opacity 0.6s ease-in-out, filter 0.4s ease;
-}
-
-.photo-container .bg-image {
-    object-fit: cover;
-    filter: blur(10px) brightness(0.95);
-    transform: scale(1.1);
-    /* Start invisible */
-    opacity: 0;
-}
-
-.photo-container .main-image {
-    object-fit: contain;
-    z-index: 2;
-    /* Start invisible */
-    opacity: 0;
-}
-
-/* This class is added by JS when the image is loaded */
-.photo-container.loaded .main-image,
-.photo-container.loaded .bg-image {
-    /* Become visible */
-    opacity: 1;
-}
-
-.photo-container.loaded .loader {
-    /* Hide the loader spinner */
-    opacity: 0;
-    pointer-events: none;
-}
+/* Original photo container styles deleted to avoid duplication */
 
 /* Add to the end of public/css/style.css */
 
@@ -1196,3 +1199,125 @@ body.lightbox-active .sticky-submit-btn {
         /* Down from 2.8rem */
     }
 }
+
+/* --- Phase 1 Enhancements: Toggle Filtering & Note Comments --- */
+
+.filter-toggle-container {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.switch-label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-color-secondary);
+    padding: 8px 16px;
+    background: var(--surface-bg);
+    border-radius: 30px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.switch-label:hover {
+    border-color: var(--brand-gold);
+    color: var(--text-color-primary);
+}
+
+.switch-input {
+    display: none;
+}
+
+.switch-slider {
+    position: relative;
+    width: 44px;
+    height: 22px;
+    background-color: #ccc;
+    border-radius: 34px;
+    transition: background-color 0.3s ease;
+}
+
+body.dark-mode .switch-slider {
+    background-color: #444;
+}
+
+.switch-slider::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.switch-input:checked + .switch-slider {
+    background-color: var(--brand-gold-dark);
+}
+
+.switch-input:checked + .switch-slider::before {
+    transform: translateX(22px);
+}
+
+/* Instant CSS-based Selection Filter */
+.filter-selected-only .photo-container:not(.selected) {
+    display: none !important;
+}
+
+/* Lightbox Comment Box styling */
+.lightbox-note-container {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 500px;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 30px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1005;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.lightbox-note-container:focus-within {
+    border-color: var(--brand-gold);
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.lightbox-note-container .note-icon {
+    color: var(--brand-gold);
+    font-size: 1.1rem;
+}
+
+.lightbox-note-container input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 0.9rem;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.lightbox-note-container input::placeholder {
+    color: #bbb;
+}

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Photo Selections Submitted</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333333; -webkit-font-smoothing: antialiased;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+        <tr>
+            <td align="center" style="background-color: #f4f6f8; padding: 40px 10px 40px 10px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #eef2f5;">
+                    
+                    <!-- HEADER -->
+                    <tr>
+                        <td align="center" style="background-color: #1a1a1a; padding: 35px 20px; text-align: center;">
+                            <h1 style="margin: 0; font-family: Georgia, serif; font-size: 26px; font-weight: 300; letter-spacing: 2px; color: #d4af37; text-transform: uppercase;">
+                                Signature Photography
+                            </h1>
+                            <p style="margin: 5px 0 0 0; font-size: 13px; color: #a5a5a5; text-transform: uppercase; letter-spacing: 1.5px;">
+                                Client Selection Portal
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- HERO SUBTITLE -->
+                    <tr>
+                        <td style="padding: 30px 40px 15px 40px; text-align: center;">
+                            <h2 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 600; color: #111111;">
+                                New Selections Received!
+                            </h2>
+                            <p style="margin: 0; font-size: 15px; color: #666666; line-height: 1.5;">
+                                A client has finalized and submitted their photo selections. See the details and download query below.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- CLIENT DETAILS CARD -->
+                    <tr>
+                        <td style="padding: 15px 40px 20px 40px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9fbfd; border-radius: 8px; border: 1px solid #e2edf8; padding: 20px;">
+                                <tr>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #666666; width: 110px; font-weight: bold;">
+                                        Client Name:
+                                    </td>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #111111; font-weight: 600;">
+                                        {{client_name}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #666666; font-weight: bold;">
+                                        Email Address:
+                                    </td>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #111111;">
+                                        <a href="mailto:{{client_email}}" style="color: #1a73e8; text-decoration: none;">{{client_email}}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #666666; font-weight: bold;">
+                                        Phone Number:
+                                    </td>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #111111;">
+                                        {{client_phone}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #666666; font-weight: bold;">
+                                        Gallery Slug:
+                                    </td>
+                                    <td style="padding-bottom: 10px; font-size: 14px; color: #111111; font-family: monospace; background: #eef2f5; padding: 2px 6px; border-radius: 4px; display: inline-block;">
+                                        {{gallery_slug}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 14px; color: #666666; font-weight: bold;">
+                                        Total Selected:
+                                    </td>
+                                    <td style="font-size: 14px; color: #d4af37; font-weight: bold;">
+                                        {{total_selected}} photos
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- SELECTION TABLE (COLLAPSIBLE) -->
+                    <tr>
+                        <td style="padding: 10px 40px 20px 40px;">
+                            <details style="border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; background-color: #fafafa;">
+                                <summary style="padding: 12px 15px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 600; color: #111111; cursor: pointer; outline: none; user-select: none; background-color: #f8f9fa; display: list-item; border-bottom: 1px solid #dee2e6;">
+                                    View Selected Photos List ({{total_selected}} items)
+                                </summary>
+                                <div style="padding: 15px; background-color: #ffffff; overflow-x: auto;">
+                                    <!-- Raw HTML Table parameter from backend (use triple curly braces in EmailJS to prevent HTML escaping) -->
+                                    {{{selected_photos_html}}}
+                                </div>
+                            </details>
+                        </td>
+                    </tr>
+
+                    <!-- GOOGLE DRIVE FILTER SECTION -->
+                    <tr>
+                        <td style="padding: 20px 40px 30px 40px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fff9e6; border: 1px dashed #d4af37; border-radius: 8px; padding: 20px;">
+                                <tr>
+                                    <td>
+                                        <h4 style="margin: 0 0 8px 0; color: #856404; font-size: 15px; font-weight: 600;">
+                                            📁 Google Drive Filter Query
+                                        </h4>
+                                        <p style="margin: 0 0 12px 0; font-size: 13px; color: #665c3f; line-height: 1.4;">
+                                            Click inside the query box below to automatically select all text, then copy and paste it into Google Drive's search bar to filter selected photos:
+                                        </p>
+                                        
+                                        <!-- Code block with CSS click-to-select support -->
+                                        <div style="background-color: #ffffff; border: 1px solid #e8e3d3; border-radius: 6px; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 12px; color: #333333; word-break: break-all; -webkit-user-select: all; -moz-user-select: all; -ms-user-select: all; user-select: all; line-height: 1.5; margin-bottom: 15px; cursor: pointer;" title="Click to select all">
+                                            {{search_query}}
+                                        </div>
+                                        
+                                        <!-- View folder button -->
+                                        <table border="0" cellpadding="0" cellspacing="0" style="margin-top: 10px; width: 100%;">
+                                            <tr>
+                                                <td align="center" bgcolor="#d4af37" style="border-radius: 6px;">
+                                                    <a href="{{folder_link}}" target="_blank" style="display: block; padding: 12px 20px; font-family: Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                        Open Google Drive Folder
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="font-size: 12px; color: #999999; padding-bottom: 40px;">
+                &copy; 2026 Signature Photography. All rights reserved.
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

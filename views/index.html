@@ -28,7 +28,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css?v=1.1">
     <link rel="manifest" href="/favicon/site.webmanifest">
 </head>
 
@@ -109,6 +109,16 @@
             <div id="page-title-header">
                 <h1 id="page-main-title">Your Gallery</h1>
                 <p id="header-subtitle">Select your favorite photos for editing.</p>
+                <div class="filter-toggle-container">
+                    <label class="switch-label">
+                        <input type="checkbox" id="selected-only-toggle" class="switch-input">
+                        <span class="switch-slider"></span>
+                        <span class="switch-text">Show Selected Only</span>
+                    </label>
+                </div>
+                <div id="selection-limit-container" style="display: none; margin-top: 15px; font-weight: 600; font-size: 0.95rem; color: var(--brand-gold-dark);">
+                    <i class="fas fa-info-circle"></i> Selection Limit: <span id="selection-limit-status">0 / 0</span> photos selected.
+                </div>
             </div>
 
             <div id="photo-gallery" class="gallery-grid">
@@ -136,6 +146,10 @@
             <button id="lightbox-next" class="lightbox-btn" aria-label="Next image"><i
                     class="fas fa-chevron-right"></i></button>
             <div id="lightbox-selection-checkbox" class="selection-checkbox"></div>
+            <div class="lightbox-note-container">
+                <i class="far fa-comment-dots note-icon"></i>
+                <input type="text" id="lightbox-photo-note" placeholder="Add note (e.g. skin retouch, crop)..." maxlength="250">
+            </div>
         </div>
     </div>
 
@@ -214,7 +228,7 @@
     </script>
 
 
-    <script src="/js/script.js"></script>
+    <script src="/js/script.js?v=1.1"></script>
 
 </body>
 

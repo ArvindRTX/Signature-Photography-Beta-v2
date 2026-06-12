@@ -84,6 +84,28 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   };
 
+  const exportToCSV = (filename, headers, rows) => {
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(val => {
+        const str = (val === null || val === undefined) ? "" : String(val);
+        return `"${str.replace(/"/g, '""')}"`;
+      }).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   // --- IMPROVED ERROR HANDLING ---
   const fetchWithErrorHandling = async (url, options = {}) => {
     try {
@@ -126,29 +148,70 @@ document.addEventListener("DOMContentLoaded", () => {
         : data
             .map((item) => {
               if (type === "galleries") {
-                return `<div class="item"><div class="item-info"><div><i class="fas fa-images fa-lg"></i></div><div><p><strong>${item.name}</strong></p><a href="/gallery/${item.slug}" target="_blank">View Gallery</a></div></div><div class="item-actions"><button class="btn btn-secondary btn-small" data-action="share-gallery" data-name="${item.name}" data-slug="${item.slug}"><span>Share</span><i class="fas fa-share-alt"></i></button><button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="gallery" data-id="${item._id}"><span>Delete</span><i class="fas fa-trash-alt"></i></button></div></div>`;
+                return `
+                  <div class="item">
+                    <div class="item-info">
+                      <i class="fas fa-images fa-lg"></i>
+                      <p><strong>${item.name}</strong></p>
+                      <a href="/gallery/${item.slug}" target="_blank" class="item-subtext" style="text-decoration:none;">
+                        <i class="fas fa-external-link-alt" style="width:auto; height:auto; background:none; color:inherit; display:inline; margin:0;"></i> View Live Gallery
+                      </a>
+                    </div>
+                    <div class="item-actions-grid">
+                      <button class="btn btn-secondary btn-small" data-action="share-gallery" data-name="${item.name}" data-slug="${item.slug}">
+                        <i class="fas fa-share-alt"></i> <span>Share</span>
+                      </button>
+                      <button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="gallery" data-id="${item._id}">
+                        <i class="fas fa-trash-alt"></i> <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                `;
               }
               if (type === "clients") {
-                return `<div class="item"><div class="item-info"><div><i class="fas fa-user fa-lg"></i></div><div><p><strong>${
-                  item.name
-                }</strong></p><p class="item-subtext">Galleries: ${
-                  item.galleryIds?.length || 0
-                }</p></div></div><div class="actions-cell"><button class="actions-btn" data-action="toggle-dropdown" data-id="${
-                  item._id
-                }"><i class="fas fa-ellipsis-v"></i></button><div class="dropdown-menu" data-menu-for="${
-                  item._id
-                }"><button class="dropdown-item" data-action="view-client" data-id="${
-                  item._id
-                }"><i class="fas fa-eye"></i> View</button><button class="dropdown-item" data-action="edit-client" data-id="${
-                  item._id
-                }"><i class="fas fa-edit"></i> Edit</button><button class="dropdown-item" data-action="assign-gallery" data-id="${
-                  item._id
-                }"><i class="fas fa-images"></i> Assign</button><div class="dropdown-divider"></div><button class="dropdown-item" data-action="confirm-delete" data-type="client" data-id="${
-                  item._id
-                }"><i class="fas fa-trash-alt"></i> Delete</button></div></div></div>`;
+                return `
+                  <div class="item">
+                    <div class="item-info">
+                      <i class="fas fa-user fa-lg"></i>
+                      <p><strong class="clickable-title" data-action="view-client" data-id="${item._id}" title="Click to view details">${item.name}</strong></p>
+                      <p class="item-subtext">Galleries Assigned: ${item.galleryIds?.length || 0}</p>
+                    </div>
+                    <div class="item-actions-grid" style="grid-template-columns: repeat(2, 1fr);">
+                      <button class="btn btn-secondary btn-small" data-action="view-client" data-id="${item._id}">
+                        <i class="fas fa-eye"></i> <span>View</span>
+                      </button>
+                      <button class="btn btn-secondary btn-small" data-action="edit-client" data-id="${item._id}">
+                        <i class="fas fa-edit"></i> <span>Edit</span>
+                      </button>
+                      <button class="btn btn-secondary btn-small" data-action="assign-gallery" data-id="${item._id}">
+                        <i class="fas fa-link"></i> <span>Assign</span>
+                      </button>
+                      <button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="client" data-id="${item._id}">
+                        <i class="fas fa-trash-alt"></i> <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                `;
               }
               if (type === "contacts") {
-                return `<div class="item"><div class="item-info"><div><i class="fas fa-address-card fa-lg"></i></div><div><p><strong>${item.name}</strong></p><p class="item-subtext">${item.email}</p></div></div><div class="actions-cell"><button class="btn btn-secondary btn-small" data-action="view-submissions" data-email="${item.email}" data-name="${item.name}"><i class="fas fa-history"></i> History</button><button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="contact" data-id="${item._id}"><i class="fas fa-trash-alt"></i></button></div></div>`;
+                return `
+                  <div class="item">
+                    <div class="item-info">
+                      <i class="fas fa-address-card fa-lg"></i>
+                      <p><strong>${item.name}</strong></p>
+                      <p class="item-subtext">${item.email}</p>
+                      ${item.phone ? `<p class="item-subtext" style="font-size:0.75rem; margin-top:2px;">Phone: ${item.phone}</p>` : ''}
+                    </div>
+                    <div class="item-actions-grid">
+                      <button class="btn btn-secondary btn-small" data-action="view-submissions" data-email="${item.email}" data-name="${item.name}">
+                        <i class="fas fa-history"></i> <span>History</span>
+                      </button>
+                      <button class="btn btn-danger btn-small" data-action="confirm-delete" data-type="contact" data-id="${item._id}">
+                        <i class="fas fa-trash-alt"></i> <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                `;
               }
             })
             .join("");
@@ -318,16 +381,59 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       listEl.innerHTML = submissions
         .map(
-          (sub) =>
-            `<div class="submission-item"><p><strong>Date:</strong> ${new Date(
-              sub.submittedAt
-            ).toLocaleString()}</p><p><strong>Gallery:</strong> ${
-              sub.gallerySlug || "N/A"
-            }</p><p><strong>Selections (${
-              sub.selectedPhotos.length
-            }):</strong></p><div class="photo-list">${sub.selectedPhotos
-              .map((p) => p.name)
-              .join("<br>")}</div></div>`
+          (sub) => {
+            const queryText = sub.selectedPhotos.map(p => `"${p.name}"`).join(" OR ");
+            const lightroomText = sub.selectedPhotos.map(p => {
+              const name = p.name || "";
+              return name.replace(/\.[^/.]+$/, "");
+            }).join(", ");
+            return `
+              <div class="submission-item">
+                <div class="submission-header">
+                  <p><strong>Date:</strong> ${new Date(sub.submittedAt).toLocaleString()}</p>
+                  <p><strong>Gallery:</strong> <span class="gallery-badge">${sub.gallerySlug || "N/A"}</span></p>
+                </div>
+                
+                <p class="selections-label"><strong>Selections (${sub.selectedPhotos.length}):</strong></p>
+                <ul class="photo-selection-list">
+                  ${sub.selectedPhotos.map((p, idx) => `
+                    <li>
+                      <span class="photo-index">${idx + 1}</span>
+                      <div class="photo-info-wrapper">
+                        <span class="photo-name">${p.name}</span>
+                        ${p.note ? `<span class="photo-note"><i class="fas fa-comment-dots"></i> Note: ${p.note}</span>` : ''}
+                      </div>
+                      ${p.id ? `<a href="https://drive.google.com/open?id=${p.id}" target="_blank" class="photo-link-icon" title="View in Google Drive"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                    </li>
+                  `).join("")}
+                </ul>
+
+                <div class="search-query-container">
+                  <div class="search-query-header">
+                    <span class="search-query-label"><i class="fab fa-google-drive"></i> Google Drive Search Query</span>
+                  </div>
+                  <div class="search-query-box-wrapper">
+                    <code class="search-query-code">${queryText}</code>
+                    <button class="btn btn-primary btn-small copy-query-btn" data-query="${encodeURIComponent(queryText)}">
+                      <i class="fas fa-copy"></i> <span>Copy</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="search-query-container" style="margin-top: 12px;">
+                  <div class="search-query-header">
+                    <span class="search-query-label"><i class="fas fa-camera"></i> Adobe Lightroom Query (Base Filenames)</span>
+                  </div>
+                  <div class="search-query-box-wrapper">
+                    <code class="search-query-code">${lightroomText}</code>
+                    <button class="btn btn-primary btn-small copy-lr-btn" data-query="${encodeURIComponent(lightroomText)}">
+                      <i class="fas fa-copy"></i> <span>Copy Lightroom List</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
         )
         .join("");
     } catch (error) {
@@ -471,6 +577,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  window.refreshDashboardData = async () => {
+    try {
+      await fetchStats();
+      await fetchList("galleries");
+      await fetchList("clients");
+      await fetchList("contacts");
+      await fetchAllClientAndGalleryData();
+    } catch (error) {
+      console.error("Failed to refresh dashboard data:", error);
+    }
+  };
+
   const logout = () => {
     localStorage.clear();
     location.reload();
@@ -545,8 +663,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (loginForm)
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const username = loginForm.username.value;
-      const password = loginForm.password.value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
       const submitBtn = loginForm.querySelector('button[type="submit"]');
       submitBtn.classList.add("loading");
       submitBtn.disabled = true;
@@ -569,7 +687,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   // --- GLOBAL EVENT DELEGATION ---
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
     const toggleButton = e.target.closest(".password-toggle");
     if (toggleButton) {
       const parent = toggleButton.parentElement;
@@ -583,6 +701,92 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       return;
     }
+
+    const copyBtn = e.target.closest(".copy-query-btn, .copy-lr-btn");
+    if (copyBtn) {
+      const isLR = copyBtn.classList.contains("copy-lr-btn");
+      const msg = isLR ? "Adobe Lightroom query copied!" : "Google Drive search query copied!";
+      const query = decodeURIComponent(copyBtn.dataset.query);
+      navigator.clipboard.writeText(query)
+        .then(() => {
+          showToast(msg, "success");
+          const originalHTML = copyBtn.innerHTML;
+          copyBtn.innerHTML = `<i class="fas fa-check"></i> <span>Copied!</span>`;
+          copyBtn.classList.add("copied");
+          setTimeout(() => {
+            copyBtn.innerHTML = originalHTML;
+            copyBtn.classList.remove("copied");
+          }, 2000);
+        })
+        .catch(err => {
+          console.error("Copy failed:", err);
+          showToast(isLR ? "Failed to copy Lightroom list." : "Failed to copy search query.", "error");
+        });
+      return;
+    }
+
+    const copyShareBtn = e.target.closest(".copy-client-share-btn");
+    if (copyShareBtn) {
+      const clientId = copyShareBtn.dataset.clientId;
+      const gallerySlug = copyShareBtn.dataset.gallerySlug;
+      const originalHTML = copyShareBtn.innerHTML;
+      copyShareBtn.disabled = true;
+      copyShareBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+      fetch(`/api/clients/${clientId}/share-link?gallerySlug=${gallerySlug}`, { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.shareUrl) {
+            navigator.clipboard.writeText(data.shareUrl)
+              .then(() => {
+                showToast("Auto-login secure link copied!", "success");
+                copyShareBtn.innerHTML = `<i class="fas fa-check"></i> Copied!`;
+                setTimeout(() => {
+                  copyShareBtn.innerHTML = originalHTML;
+                  copyShareBtn.disabled = false;
+                }, 2000);
+              });
+          } else {
+            throw new Error(data.message || "Failed to generate link.");
+          }
+        })
+        .catch(err => {
+          showToast(err.message || "Could not generate link.", "error");
+          copyShareBtn.innerHTML = originalHTML;
+          copyShareBtn.disabled = false;
+        });
+      return;
+    }
+
+    const whatsappShareBtn = e.target.closest(".whatsapp-client-share-btn");
+    if (whatsappShareBtn) {
+      const clientId = whatsappShareBtn.dataset.clientId;
+      const clientName = decodeURIComponent(whatsappShareBtn.dataset.clientName);
+      const gallerySlug = whatsappShareBtn.dataset.gallerySlug;
+      const originalHTML = whatsappShareBtn.innerHTML;
+      whatsappShareBtn.disabled = true;
+      whatsappShareBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+      fetch(`/api/clients/${clientId}/share-link?gallerySlug=${gallerySlug}`, { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.shareUrl) {
+            const message = `Hi ${clientName}, your photo gallery is ready! You can view and select your favorite photos using this link: ${data.shareUrl}`;
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, "_blank");
+            showToast("Opening WhatsApp Web...", "success");
+            whatsappShareBtn.innerHTML = originalHTML;
+            whatsappShareBtn.disabled = false;
+          } else {
+            throw new Error(data.message || "Failed to generate link.");
+          }
+        })
+        .catch(err => {
+          showToast(err.message || "Could not generate link.", "error");
+          whatsappShareBtn.innerHTML = originalHTML;
+          whatsappShareBtn.disabled = false;
+        });
+      return;
+    }
+
     let target = e.target.closest("[data-action]");
     if (!target) {
       document
@@ -655,11 +859,64 @@ document.addEventListener("DOMContentLoaded", () => {
           );
           galleryUList.innerHTML =
             assigned.length > 0
-              ? assigned.map((g) => `<li>${g.name}</li>`).join("")
+              ? assigned.map((g) => `
+                  <li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <span>${g.name}</span>
+                    <div style="display: flex; gap: 6px;">
+                      <button class="btn btn-secondary btn-small copy-client-share-btn" data-client-id="${client._id}" data-gallery-slug="${g.slug}" style="padding: 4px 10px; font-size: 0.75rem;">
+                        <i class="fas fa-link"></i> Copy Link
+                      </button>
+                      <button class="btn btn-primary btn-small whatsapp-client-share-btn" data-client-id="${client._id}" data-client-name="${encodeURIComponent(client.name)}" data-gallery-slug="${g.slug}" style="padding: 4px 10px; font-size: 0.75rem;">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
+                      </button>
+                    </div>
+                  </li>
+                `).join("")
               : "<li>No galleries assigned.</li>";
           showModal("view-client-modal");
         }
         break;
+      case "export-clients": {
+        try {
+          const result = await fetchWithErrorHandling("/api/clients?limit=10000", { cache: "no-cache" });
+          if (result && result.data) {
+            const headers = ["ID", "Name", "Username", "Created At", "Assigned Galleries Count"];
+            const rows = result.data.map(c => [
+              c.id,
+              c.name,
+              c.username,
+              c.createdAt,
+              c.galleryIds ? c.galleryIds.length : 0
+            ]);
+            exportToCSV("clients.csv", headers, rows);
+            showToast("Clients exported to CSV successfully!", "success");
+          }
+        } catch (err) {
+          console.error("Export clients failed:", err);
+        }
+        break;
+      }
+      case "export-contacts": {
+        try {
+          const result = await fetchWithErrorHandling("/api/contacts?limit=10000", { cache: "no-cache" });
+          if (result && result.data) {
+            const headers = ["ID", "Name", "Email", "Phone", "Created At", "Last Submitted At"];
+            const rows = result.data.map(c => [
+              c.id,
+              c.name,
+              c.email,
+              c.phone,
+              c.createdAt,
+              c.lastSubmittedAt
+            ]);
+            exportToCSV("contacts.csv", headers, rows);
+            showToast("Contacts exported to CSV successfully!", "success");
+          }
+        } catch (err) {
+          console.error("Export contacts failed:", err);
+        }
+        break;
+      }
     }
   });
 
@@ -697,6 +954,7 @@ document.addEventListener("DOMContentLoaded", () => {
           name: document.getElementById("gallery-name").value,
           folderLink: document.getElementById("folder-link").value,
           clientId: document.getElementById("client-select").value,
+          selectionLimit: document.getElementById("gallery-limit").value,
         },
         createGalleryForm,
         () => {
@@ -787,14 +1045,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!itemToDelete.type || !itemToDelete.id) return;
 
       try {
+        const endpointType = itemToDelete.type === "gallery" ? "galleries" : `${itemToDelete.type}s`;
         await fetchWithErrorHandling(
-          `/api/${itemToDelete.type}s/${itemToDelete.id}`,
+          `/api/${endpointType}/${itemToDelete.id}`,
           {
             method: "DELETE",
           }
         );
 
-        fetchList(`${itemToDelete.type}s`);
+        fetchList(endpointType);
         fetchStats();
         fetchAllClientAndGalleryData();
         hideModal("confirm-modal");
