@@ -443,32 +443,60 @@ body.dark-mode #login-message-area {
 }
 
 .submit-btn .spinner {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 24px;
-    height: 24px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    opacity: 0;
-    transition: opacity 0.3s;
+    display: none; /* hidden; dots are used instead */
 }
 
-.submit-btn.loading .spinner {
+/* Three-dot sequential pulse animation */
+.submit-btn .loading-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.submit-btn .loading-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    display: block;
+    animation: none;
+    opacity: 0.3;
+}
+
+.submit-btn.loading .loading-dots {
     opacity: 1;
 }
 
+.submit-btn.loading .loading-dots span:nth-child(1) {
+    animation: dotPulse 1.2s ease-in-out 0s infinite;
+}
+.submit-btn.loading .loading-dots span:nth-child(2) {
+    animation: dotPulse 1.2s ease-in-out 0.2s infinite;
+}
+.submit-btn.loading .loading-dots span:nth-child(3) {
+    animation: dotPulse 1.2s ease-in-out 0.4s infinite;
+}
+
+@keyframes dotPulse {
+    0%, 100% { opacity: 0.25; transform: translateY(0); }
+    40%       { opacity: 1;    transform: translateY(-5px); }
+    60%       { opacity: 1;    transform: translateY(-5px); }
+}
+
 .submit-btn.loading {
-    padding-right: 60px;
+    color: transparent; /* hide text so dots are clearly visible */
+    pointer-events: none;
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
 .gallery-grid {
