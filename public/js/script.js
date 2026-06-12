@@ -590,12 +590,10 @@ document.addEventListener("DOMContentLoaded", () => {
           errorData.message || `Submission failed with status ${res.status}`
         );
       }
-      if (selectionForm) selectionForm.style.display = "none";
-      const successMessage = document.getElementById("success-message");
-      if (successMessage) successMessage.style.display = "block";
-      showToast("Your selections have been submitted successfully!", "success");
-      selectedPhotos = [];
-      updateSelectionUI();
+      // Clear session and redirect to the congratulations page
+      sessionStorage.removeItem("clientToken");
+      sessionStorage.removeItem("clientName");
+      window.location.href = "/submission-success";
     } catch (error) {
       console.error("Submission error:", error);
       showToast(

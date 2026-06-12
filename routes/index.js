@@ -10,6 +10,10 @@ router.get("/dashboard", (req, res) =>
     res.sendFile(path.join(__dirname, "../views/dashboard.html"))
 );
 
+router.get("/submission-success", (req, res) =>
+    res.sendFile(path.join(__dirname, "../views/success.html"))
+);
+
 router.get("/", (req, res) => 
     res.sendFile(path.join(__dirname, "../views/index.html"))
 );
