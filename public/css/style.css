@@ -556,6 +556,21 @@ body.dark-mode .loader {
     animation: skeletonShimmer 1.5s infinite linear;
 }
 
+/* Skeleton pre-render placeholder cards */
+.photo-container.skeleton-placeholder {
+    pointer-events: none;
+    cursor: default;
+    opacity: 0.7;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+    transition: opacity 0.3s ease;
+}
+.photo-container.skeleton-placeholder:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 .photo-container .bg-image {
     position: absolute;
     top: 0;
@@ -567,7 +582,7 @@ body.dark-mode .loader {
     transform: scale(1.05);
     z-index: 1;
     opacity: 0;
-    transition: opacity 0.5s ease-in-out, filter 0.4s ease;
+    transition: opacity 0.5s ease-in-out, filter 0.5s ease;
 }
 
 .photo-container .main-image {
@@ -577,7 +592,7 @@ body.dark-mode .loader {
     height: auto;
     z-index: 2;
     opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    transition: opacity 0.5s ease-in-out, filter 0.5s ease;
 }
 
 .photo-container.loaded .loader {
@@ -760,12 +775,122 @@ body.dark-mode .modal-overlay {
     background: var(--surface-bg);
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
-    padding: 50px;
+    padding: 40px 50px;
     border-radius: 20px;
     width: 100%;
-    max-width: 600px;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 30px 80px var(--shadow-color);
     border: 1px solid var(--border-color);
+}
+
+/* Review step inside submission modal */
+.modal-step {
+    display: none;
+}
+.modal-step.active {
+    display: block;
+    animation: fadeInUp 0.35s ease-out;
+}
+
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    max-height: 340px;
+    overflow-y: auto;
+    margin: 20px 0 28px;
+    padding: 4px;
+}
+
+.review-thumb {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--photo-container-bg);
+    border: 2px solid var(--brand-gold-dark);
+    box-shadow: 0 4px 12px rgba(181,145,80,0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-thumb:hover {
+    transform: scale(1.04);
+    box-shadow: 0 8px 20px rgba(181,145,80,0.3);
+}
+
+.review-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.review-thumb .remove-thumb {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(220, 53, 69, 0.88);
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 5;
+    line-height: 1;
+}
+
+.review-thumb:hover .remove-thumb {
+    opacity: 1;
+}
+
+.review-thumb .thumb-note {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 10px;
+    padding: 3px 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.modal-step-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.modal-step-actions .btn-back {
+    flex: 0 0 auto;
+    background: none;
+    border: 1.5px solid var(--border-color);
+    color: var(--text-color-secondary);
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.modal-step-actions .btn-back:hover {
+    border-color: var(--brand-gold-dark);
+    color: var(--brand-gold-dark);
+}
+
+.modal-step-actions .submit-btn {
+    flex: 1;
 }
 
 .submission-section h2 {

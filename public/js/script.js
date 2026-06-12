@@ -53,6 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const selectionLimitContainer = document.getElementById("selection-limit-container");
   const selectionLimitStatus = document.getElementById("selection-limit-status");
 
+  // Two-step modal elements
+  const reviewGrid = document.getElementById("review-grid");
+  const reviewContinueBtn = document.getElementById("review-continue-btn");
+  const formBackBtn = document.getElementById("form-back-btn");
+  const modalStepReview = document.getElementById("modal-step-review");
+  const modalStepForm = document.getElementById("modal-step-form");
+  const selectionCountModalForm = document.getElementById("selection-count-modal-form");
+
   // --- OBSERVER FOR LAZY LOADING IMAGES ---
   const imageObserver = new IntersectionObserver(
     (entries, observer) => {
@@ -67,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     },
-    { rootMargin: "200px" }
+    { rootMargin: "600px" }
   );
 
   // --- OBSERVER FOR PAGINATION ---
@@ -77,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchPhotos();
       }
     },
-    { rootMargin: "400px" }
+    { rootMargin: "1000px" }
   );
 
   // --- HELPERS ---
@@ -113,6 +121,32 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // --- API & DATA FETCHING ---
+  // --- SKELETON HELPERS ---
+  const SKELETON_RATIOS = [
+    [3, 4], [4, 5], [2, 3], [3, 2], [4, 3], [16, 9], [1, 1], [5, 7]
+  ];
+  let _skeletonNodes = [];
+
+  const insertSkeletons = (count = 6) => {
+    const columns = photoGallery ? photoGallery.querySelectorAll(".gallery-column") : [];
+    if (columns.length === 0) return;
+    _skeletonNodes = [];
+    for (let i = 0; i < count; i++) {
+      const col = columns[i % columns.length];
+      const [w, h] = SKELETON_RATIOS[i % SKELETON_RATIOS.length];
+      const skel = document.createElement("div");
+      skel.className = "photo-container skeleton-placeholder";
+      skel.style.aspectRatio = `${w} / ${h}`;
+      col.appendChild(skel);
+      _skeletonNodes.push(skel);
+    }
+  };
+
+  const removeSkeletons = () => {
+    _skeletonNodes.forEach((n) => n.remove());
+    _skeletonNodes = [];
+  };
+
   const fetchPhotos = async () => {
     if (selectedOnlyToggle && selectedOnlyToggle.checked) return;
     if (isLoading || (currentPage > totalPages && totalPages > 1)) return;
@@ -120,9 +154,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loadingSentinel)
       loadingSentinel.querySelector(".loader").style.display = "inline-block";
 
+    // Pre-render shimmer skeletons so columns visually extend below viewport
+    if (currentPage > 1) insertSkeletons(6);
+
     try {
       const res = await fetch(
-        `/api/my-gallery?slug=${gallerySlug}&page=${currentPage}&limit=50`,
+        `/api/my-gallery?slug=${gallerySlug}&page=${currentPage}&limit=60`,
         {
           headers: { Authorization: `Bearer ${getClientToken()}` },
         }
@@ -135,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
           window.location.href = "/";
         }, 2500);
+        removeSkeletons();
         return;
       }
       if (!res.ok) throw new Error("Failed to fetch gallery data.");
@@ -143,11 +181,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.selectionLimit) {
         selectionLimit = parseInt(data.selectionLimit) || null;
       }
+      removeSkeletons();
       allPhotos.push(...data.photos);
       renderPhotos(data.photos);
       currentPage++;
     } catch (error) {
       console.error(error);
+      removeSkeletons();
     } finally {
       isLoading = false;
       if (loadingSentinel)
@@ -239,6 +279,58 @@ document.addEventListener("DOMContentLoaded", () => {
     if (stickySubmitBtn) {
       stickySubmitBtn.classList.toggle("visible", selectedPhotos.length > 0);
     }
+  };
+
+  // --- REVIEW GRID POPULATION ---
+  const populateReviewGrid = () => {
+    if (!reviewGrid) return;
+    reviewGrid.innerHTML = "";
+    selectedPhotos.forEach((photo) => {
+      const thumb = document.createElement("div");
+      thumb.className = "review-thumb";
+      thumb.dataset.photoId = photo.id;
+
+      const img = document.createElement("img");
+      img.src = photo.url || `https://drive.google.com/thumbnail?id=${photo.id}&sz=w400`;
+      img.alt = photo.name;
+      img.referrerPolicy = "no-referrer";
+      img.loading = "lazy";
+      thumb.appendChild(img);
+
+      if (photo.note && photo.note.trim()) {
+        const noteEl = document.createElement("div");
+        noteEl.className = "thumb-note";
+        noteEl.title = photo.note;
+        noteEl.textContent = photo.note;
+        thumb.appendChild(noteEl);
+      }
+
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "remove-thumb";
+      removeBtn.innerHTML = "&times;";
+      removeBtn.title = "Remove from selection";
+      removeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleSelection(photo.id, photo.name);
+        populateReviewGrid();
+      });
+      thumb.appendChild(removeBtn);
+
+      reviewGrid.appendChild(thumb);
+    });
+  };
+
+  // --- MODAL STEP NAVIGATION ---
+  const openReviewStep = () => {
+    if (modalStepReview) modalStepReview.classList.add("active");
+    if (modalStepForm) modalStepForm.classList.remove("active");
+    populateReviewGrid();
+  };
+
+  const openFormStep = () => {
+    if (modalStepForm) modalStepForm.classList.add("active");
+    if (modalStepReview) modalStepReview.classList.remove("active");
+    if (selectionCountModalForm) selectionCountModalForm.textContent = selectedPhotos.length;
   };
 
   const updateSelectionUI = () => {
@@ -348,7 +440,10 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const toggleSelection = (photoId, photoName, note = "") => {
-    const photo = { id: photoId, name: photoName, note: note };
+    // Look up URL from allPhotos
+    const photoData = allPhotos.find((p) => p.id === photoId);
+    const photoUrl = photoData ? photoData.url : `https://drive.google.com/thumbnail?id=${photoId}&sz=w400`;
+    const photo = { id: photoId, name: photoName, note: note, url: photoUrl };
     const index = selectedPhotos.findIndex((p) => p.id === photo.id);
     if (index > -1) {
       selectedPhotos.splice(index, 1);
@@ -375,7 +470,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (lightboxPhotoNote) lightboxPhotoNote.value = "";
           return;
         }
-        selectedPhotos.push({ id: photoId, name: photoName, note: note });
+        const photoData = allPhotos.find((p) => p.id === photoId);
+        const photoUrl = photoData ? photoData.url : `https://drive.google.com/thumbnail?id=${photoId}&sz=w400`;
+        selectedPhotos.push({ id: photoId, name: photoName, note: note, url: photoUrl });
       }
     }
     updateSelectionUI();
@@ -608,7 +705,20 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       if (submissionModal) submissionModal.style.display = "flex";
+      openReviewStep();
     });
+  }
+  if (reviewContinueBtn) {
+    reviewContinueBtn.addEventListener("click", () => {
+      if (selectedPhotos.length === 0) {
+        showToast("Please select at least one photo.", "error");
+        return;
+      }
+      openFormStep();
+    });
+  }
+  if (formBackBtn) {
+    formBackBtn.addEventListener("click", openReviewStep);
   }
   if (closeModalBtn) {
     closeModalBtn.addEventListener("click", () => {

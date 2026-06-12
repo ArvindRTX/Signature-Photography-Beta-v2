@@ -156,32 +156,55 @@
     <div id="submission-modal" class="modal-overlay">
         <div class="modal-content submission-section">
             <button id="close-modal-btn" class="modal-close-btn">&times;</button>
-            <h2 style="text-align: center; margin-bottom: 10px;">Submit Your Selections</h2>
-            <p style="text-align: center; margin-bottom: 30px;">You have selected <span
-                    id="selection-count-modal">0</span> photos.</p>
 
-            <form id="selection-form">
-                <div class="form-group">
-                    <label for="client-name">Your Name</label>
-                    <input type="text" id="client-name" required>
-                </div>
-                <div class="form-group">
-                    <label for="client-email">Your Email</label>
-                    <input type="email" id="client-email" required>
-                </div>
-                <div class="form-group">
-                    <label for="client-phone">Your Phone Number (WhatsApp preferred)</label>
-                    <input type="tel" id="client-phone" required>
-                </div>
-                <button type="submit" class="submit-btn">
-                    Confirm Selections
-                    <span class="spinner"></span>
+            <!-- Step 1: Review selections -->
+            <div id="modal-step-review" class="modal-step active">
+                <h2 style="text-align:center; margin-bottom:6px;">Review Your Selections</h2>
+                <p style="text-align:center; color:var(--text-color-secondary); margin-bottom:0;">
+                    You have selected <strong><span id="selection-count-modal">0</span></strong> photos.
+                    Hover a photo and click <strong>✕</strong> to remove it.
+                </p>
+                <div id="review-grid" class="review-grid"></div>
+                <button id="review-continue-btn" class="submit-btn" style="width:100%;">
+                    <i class="fas fa-arrow-right" style="margin-right:8px;"></i>Continue to Submit
                 </button>
-            </form>
-            <div id="success-message">
-                <h3>🎉 Success!</h3>
-                <p>Your photo selections have been submitted successfully. We'll be in touch shortly!</p>
             </div>
+
+            <!-- Step 2: Contact form -->
+            <div id="modal-step-form" class="modal-step">
+                <h2 style="text-align:center; margin-bottom:6px;">Submit Your Selections</h2>
+                <p style="text-align:center; color:var(--text-color-secondary); margin-bottom:24px;">
+                    Submitting <strong><span id="selection-count-modal-form">0</span></strong> photos — please fill in your details below.
+                </p>
+                <form id="selection-form">
+                    <div class="form-group">
+                        <label for="client-name">Your Name</label>
+                        <input type="text" id="client-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="client-email">Your Email</label>
+                        <input type="email" id="client-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="client-phone">Your Phone Number (WhatsApp preferred)</label>
+                        <input type="tel" id="client-phone" required>
+                    </div>
+                    <div class="modal-step-actions">
+                        <button type="button" id="form-back-btn" class="btn-back">
+                            <i class="fas fa-arrow-left" style="margin-right:6px;"></i>Back
+                        </button>
+                        <button type="submit" class="submit-btn">
+                            Confirm Selections
+                            <span class="spinner"></span>
+                        </button>
+                    </div>
+                </form>
+                <div id="success-message">
+                    <h3>🎉 Success!</h3>
+                    <p>Your photo selections have been submitted successfully. We'll be in touch shortly!</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
