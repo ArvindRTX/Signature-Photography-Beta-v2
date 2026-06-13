@@ -324,6 +324,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const openReviewStep = () => {
     if (modalStepReview) modalStepReview.classList.add("active");
     if (modalStepForm) modalStepForm.classList.remove("active");
+    
+    const ind1 = document.getElementById("indicator-step-1");
+    const ind2 = document.getElementById("indicator-step-2");
+    if (ind1) {
+      ind1.classList.add("active");
+      ind1.classList.remove("completed");
+    }
+    if (ind2) {
+      ind2.classList.remove("active");
+      ind2.classList.remove("completed");
+    }
+    
     populateReviewGrid();
   };
 
@@ -331,6 +343,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modalStepForm) modalStepForm.classList.add("active");
     if (modalStepReview) modalStepReview.classList.remove("active");
     if (selectionCountModalForm) selectionCountModalForm.textContent = selectedPhotos.length;
+    
+    const ind1 = document.getElementById("indicator-step-1");
+    const ind2 = document.getElementById("indicator-step-2");
+    if (ind1) {
+      ind1.classList.remove("active");
+      ind1.classList.add("completed");
+    }
+    if (ind2) {
+      ind2.classList.add("active");
+      ind2.classList.remove("completed");
+    }
   };
 
   const updateSelectionUI = () => {

@@ -12,18 +12,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --brand-gold: #c9a84c;
-            --brand-gold-dark: #a8862e;
-            --bg: #faf9f7;
-            --surface: #ffffff;
-            --text-primary: #1a1a1a;
-            --text-secondary: #6b6b6b;
-            --shadow: rgba(0,0,0,0.10);
+            --brand-gold: #c5a059;
+            --brand-gold-dark: #a8833c;
+            --brand-gold-glow: rgba(197, 160, 89, 0.12);
+            --bg: #fdfdfb;
+            --surface: rgba(253, 253, 251, 0.75);
+            --border-color: rgba(197, 160, 89, 0.15);
+            --text-primary: #1c1c1e;
+            --text-secondary: #5e5e62;
+            --card-shadow: rgba(90, 80, 70, 0.08);
+            --next-step-bg: rgba(240, 237, 230, 0.4);
+            --blob-1: rgba(197, 160, 89, 0.15);
+            --blob-2: rgba(240, 237, 230, 0.5);
+        }
+
+        body.dark-mode {
+            --brand-gold: #dcb36c;
+            --brand-gold-dark: #b89248;
+            --brand-gold-glow: rgba(220, 179, 108, 0.15);
+            --bg: #0b0b0d;
+            --surface: rgba(20, 20, 24, 0.7);
+            --border-color: rgba(220, 179, 108, 0.1);
+            --text-primary: #f0f0f5;
+            --text-secondary: #8e8e93;
+            --card-shadow: rgba(0, 0, 0, 0.4);
+            --next-step-bg: rgba(30, 30, 36, 0.4);
+            --blob-1: rgba(184, 146, 72, 0.12);
+            --blob-2: rgba(14, 14, 18, 0.7);
         }
 
         body {
@@ -37,39 +57,52 @@
             justify-content: center;
             padding: 24px;
             overflow-x: hidden;
+            position: relative;
+            transition: background 0.5s ease, color 0.3s ease;
         }
 
-        /* Ambient background blobs */
+        /* Animated Ambient background blobs */
         body::before, body::after {
             content: '';
             position: fixed;
             border-radius: 50%;
-            filter: blur(120px);
+            filter: blur(130px);
             z-index: 0;
             pointer-events: none;
         }
         body::before {
             width: 600px; height: 600px;
-            background: radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--blob-1) 0%, transparent 70%);
             top: -150px; left: -150px;
+            animation: floatSlow 25s ease-in-out infinite alternate;
         }
         body::after {
             width: 500px; height: 500px;
-            background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+            background: radial-gradient(circle, var(--blob-2) 0%, transparent 70%);
             bottom: -120px; right: -120px;
+            animation: floatSlow 20s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes floatSlow {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 30px) scale(1.1); }
         }
 
         .card {
             position: relative;
             z-index: 1;
             background: var(--surface);
-            border-radius: 28px;
+            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px);
+            border-radius: 32px;
             padding: 60px 56px 52px;
-            max-width: 560px;
+            max-width: 600px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 32px 80px var(--shadow), 0 0 0 1px rgba(201,168,76,0.12);
-            animation: riseIn 0.7s cubic-bezier(0.22,1,0.36,1) both;
+            box-shadow: 0 32px 80px var(--card-shadow), 0 0 0 1px var(--border-color);
+            border: 1px solid var(--border-color);
+            animation: riseIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         @keyframes riseIn {
@@ -81,16 +114,16 @@
         .success-icon-wrap {
             width: 96px;
             height: 96px;
-            background: linear-gradient(135deg, #fffbe8 0%, #fdf3cc 100%);
-            border: 3px solid rgba(201,168,76,0.3);
+            background: linear-gradient(135deg, var(--brand-gold-glow) 0%, transparent 100%);
+            border: 2px solid var(--brand-gold-dark);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 28px;
-            font-size: 42px;
-            animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.4s both;
-            box-shadow: 0 8px 28px rgba(201,168,76,0.22);
+            margin: 0 auto 30px;
+            font-size: 38px;
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both, pulseGlow 3s infinite ease-in-out;
+            transition: border-color 0.3s ease;
         }
 
         @keyframes popIn {
@@ -98,88 +131,120 @@
             to   { opacity: 1; transform: scale(1); }
         }
 
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px var(--brand-gold-glow); }
+            50% { box-shadow: 0 0 35px rgba(197, 160, 89, 0.3); }
+        }
+
         .brand-label {
             font-family: 'Playfair Display', serif;
-            font-size: 0.8rem;
-            letter-spacing: 0.2em;
+            font-size: 0.85rem;
+            letter-spacing: 0.25em;
             text-transform: uppercase;
             color: var(--brand-gold-dark);
             margin-bottom: 14px;
+            font-weight: 600;
             opacity: 0;
-            animation: fadeUp 0.5s ease 0.6s both;
+            animation: fadeUp 0.5s ease 0.5s both;
+            transition: color 0.3s ease;
+        }
+
+        body.dark-mode .brand-label {
+            color: var(--brand-gold);
         }
 
         h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 2.4rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: var(--text-primary);
-            line-height: 1.15;
+            line-height: 1.2;
             margin-bottom: 18px;
             opacity: 0;
-            animation: fadeUp 0.5s ease 0.75s both;
+            animation: fadeUp 0.5s ease 0.65s both;
+            transition: color 0.3s ease;
         }
 
         .subtitle {
-            font-size: 1rem;
+            font-size: 0.95rem;
             color: var(--text-secondary);
             line-height: 1.65;
-            max-width: 400px;
-            margin: 0 auto 36px;
+            max-width: 440px;
+            margin: 0 auto 32px;
+            opacity: 0;
+            animation: fadeUp 0.5s ease 0.8s both;
+            transition: color 0.3s ease;
+        }
+
+        .divider {
+            width: 80px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--brand-gold-dark), transparent);
+            margin: 0 auto 32px;
             opacity: 0;
             animation: fadeUp 0.5s ease 0.9s both;
         }
 
-        .divider {
-            width: 60px;
-            height: 2px;
+        body.dark-mode .divider {
             background: linear-gradient(90deg, transparent, var(--brand-gold), transparent);
-            margin: 0 auto 32px;
-            opacity: 0;
-            animation: fadeUp 0.5s ease 1s both;
         }
 
         .what-next {
-            background: linear-gradient(135deg, #fffdf5 0%, #fdf8e8 100%);
-            border: 1px solid rgba(201,168,76,0.2);
-            border-radius: 16px;
-            padding: 24px 28px;
+            background: var(--next-step-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 28px 32px;
             text-align: left;
             margin-bottom: 36px;
             opacity: 0;
-            animation: fadeUp 0.5s ease 1.05s both;
+            animation: fadeUp 0.5s ease 0.95s both;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
         .what-next h3 {
-            font-size: 0.78rem;
+            font-size: 0.8rem;
             font-weight: 600;
             letter-spacing: 0.14em;
             text-transform: uppercase;
             color: var(--brand-gold-dark);
-            margin-bottom: 14px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s ease;
+        }
+
+        body.dark-mode .what-next h3 {
+            color: var(--brand-gold);
         }
 
         .what-next ul {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .what-next ul li {
             display: flex;
             align-items: flex-start;
-            gap: 10px;
+            gap: 12px;
             font-size: 0.9rem;
             color: var(--text-secondary);
             line-height: 1.5;
+            transition: color 0.3s ease;
         }
 
         .what-next ul li i {
             color: var(--brand-gold-dark);
-            font-size: 0.85rem;
-            margin-top: 2px;
+            font-size: 0.95rem;
+            margin-top: 3px;
             flex-shrink: 0;
+            transition: color 0.3s ease;
+        }
+
+        body.dark-mode .what-next ul li i {
+            color: var(--brand-gold);
         }
 
         .socials {
@@ -188,54 +253,73 @@
             gap: 16px;
             margin-bottom: 36px;
             opacity: 0;
-            animation: fadeUp 0.5s ease 1.15s both;
+            animation: fadeUp 0.5s ease 1.05s both;
         }
 
         .social-btn {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
+            gap: 10px;
+            padding: 12px 24px;
             border-radius: 50px;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
             text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            letter-spacing: 0.05em;
         }
 
         .social-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            transform: translateY(-3px);
         }
 
         .social-btn.whatsapp {
             background: #25D366;
             color: #fff;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+        }
+
+        .social-btn.whatsapp:hover {
+            background: #20ba5a;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.35);
         }
 
         .social-btn.instagram {
-            background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
             color: #fff;
+            box-shadow: 0 4px 15px rgba(220, 39, 67, 0.2);
+        }
+
+        .social-btn.instagram:hover {
+            box-shadow: 0 8px 25px rgba(220, 39, 67, 0.35);
         }
 
         .home-link {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
+            font-weight: 600;
             color: var(--text-secondary);
             text-decoration: none;
-            border: 1.5px solid rgba(0,0,0,0.12);
+            border: 1px solid var(--border-color);
             border-radius: 50px;
-            padding: 10px 24px;
-            transition: border-color 0.2s ease, color 0.2s ease;
+            padding: 12px 28px;
+            transition: all 0.3s ease;
+            letter-spacing: 0.05em;
             opacity: 0;
-            animation: fadeUp 0.5s ease 1.25s both;
+            animation: fadeUp 0.5s ease 1.15s both;
         }
 
         .home-link:hover {
             border-color: var(--brand-gold-dark);
-            color: var(--brand-gold-dark);
+            color: var(--text-primary);
+            background: rgba(197, 160, 89, 0.05);
+        }
+
+        body.dark-mode .home-link:hover {
+            border-color: var(--brand-gold);
+            background: rgba(220, 179, 108, 0.05);
         }
 
         @keyframes fadeUp {
@@ -256,22 +340,24 @@
         .confetti-piece {
             position: absolute;
             top: -30px;
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
+            width: 8px;
+            height: 8px;
             opacity: 0;
             animation: fall linear infinite;
         }
 
         @keyframes fall {
-            0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
-            100% { opacity: 0; transform: translateY(110vh) rotate(720deg); }
+            0%   { opacity: 0; transform: translateY(0) rotate(0deg); }
+            10%  { opacity: 0.8; }
+            90%  { opacity: 0.8; }
+            100% { opacity: 0; transform: translateY(105vh) rotate(540deg); }
         }
 
         @media (max-width: 600px) {
             .card { padding: 40px 28px 36px; }
-            h1 { font-size: 1.9rem; }
-            .socials { flex-direction: column; align-items: center; }
+            h1 { font-size: 2rem; }
+            .socials { flex-direction: column; align-items: center; gap: 12px; }
+            .social-btn { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -293,7 +379,7 @@
         <div class="divider"></div>
 
         <div class="what-next">
-            <h3>What happens next?</h3>
+            <h3><i class="fas fa-magic"></i> What happens next?</h3>
             <ul>
                 <li>
                     <i class="fas fa-check-circle"></i>
@@ -301,7 +387,7 @@
                 </li>
                 <li>
                     <i class="fas fa-paint-brush"></i>
-                    <span>Professional retouching and colour grading will be applied to each image.</span>
+                    <span>Professional retouching and color grading will be applied to each image.</span>
                 </li>
                 <li>
                     <i class="fas fa-paper-plane"></i>
@@ -314,7 +400,7 @@
             <a href="https://wa.me/918438650107" target="_blank" rel="noopener" class="social-btn whatsapp">
                 <i class="fab fa-whatsapp"></i> WhatsApp Us
             </a>
-            <a href="https://www.instagram.com/signature.photograph" target="_blank" rel="noopener" class="social-btn instagram">
+            <a href="https://www.instagram.com/signature.photograph?utm_source=ig_web_button_share_sheet&igsh=ZHNoMmtpbGtwenEw" target="_blank" rel="noopener" class="social-btn instagram">
                 <i class="fab fa-instagram"></i> Follow Us
             </a>
         </div>
@@ -325,23 +411,32 @@
     </div>
 
     <script>
+        // Apply theme from localStorage dynamically
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+        } else {
+            document.body.classList.remove('dark-mode');
+        }
+
         // Clear client session so the gallery cannot be resubmitted
         sessionStorage.removeItem('clientToken');
         sessionStorage.removeItem('clientName');
 
-        // Gentle confetti rain
+        // Gentle sparkle rain
         const wrap = document.getElementById('confetti-wrap');
-        const COLORS = ['#c9a84c', '#f2d06b', '#e8c04e', '#fff5cc', '#a8862e', '#f7e8a0'];
-        for (let i = 0; i < 55; i++) {
+        const COLORS = ['#c5a059', '#f2d06b', '#e8c04e', '#fff5cc', '#a8833c', '#f7e8a0'];
+        for (let i = 0; i < 60; i++) {
             const el = document.createElement('div');
             el.className = 'confetti-piece';
             el.style.left = Math.random() * 100 + 'vw';
-            el.style.width = (8 + Math.random() * 8) + 'px';
-            el.style.height = (8 + Math.random() * 8) + 'px';
-            el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            el.style.width = (5 + Math.random() * 7) + 'px';
+            el.style.height = (5 + Math.random() * 7) + 'px';
+            el.style.borderRadius = Math.random() > 0.4 ? '50%' : '1px';
             el.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
-            const dur = (4 + Math.random() * 6).toFixed(2);
-            const delay = (Math.random() * 6).toFixed(2);
+            
+            const dur = (5 + Math.random() * 6).toFixed(2);
+            const delay = (Math.random() * 5).toFixed(2);
             el.style.animationDuration = dur + 's';
             el.style.animationDelay = delay + 's';
             wrap.appendChild(el);
