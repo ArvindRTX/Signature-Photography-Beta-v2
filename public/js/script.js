@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
       thumb.dataset.photoId = photo.id;
 
       const img = document.createElement("img");
-      img.src = photo.url || `https://drive.google.com/thumbnail?id=${photo.id}&sz=w400`;
+      img.src = photo.url || `https://drive.google.com/uc?export=download\u0026id=${photo.id}`;
       img.alt = photo.name;
       img.referrerPolicy = "no-referrer";
       img.loading = "lazy";
@@ -406,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
         lightboxLoader.style.display = "none";
         lightboxImg.style.opacity = "1";
       };
-      lightboxImg.src = `https://drive.google.com/thumbnail?id=${photo.id}&sz=w1920`;
+      lightboxImg.src = `https://drive.google.com/uc?export=download\u0026id=${photo.id}`;
 
       // Pre-fetch adjacent images for seamless slideshow UX
       if (allPhotos.length > 1) {
@@ -414,14 +414,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const nextPhoto = allPhotos[nextIdx];
         if (nextPhoto) {
           const preloadNext = new Image();
-          preloadNext.src = `https://drive.google.com/thumbnail?id=${nextPhoto.id}&sz=w1920`;
+          preloadNext.src = `https://drive.google.com/uc?export=download\u0026id=${nextPhoto.id}`;
         }
 
         const prevIdx = (currentLightboxIndex - 1 + allPhotos.length) % allPhotos.length;
         const prevPhoto = allPhotos[prevIdx];
         if (prevPhoto) {
           const preloadPrev = new Image();
-          preloadPrev.src = `https://drive.google.com/thumbnail?id=${prevPhoto.id}&sz=w1920`;
+          preloadPrev.src = `https://drive.google.com/uc?export=download\u0026id=${prevPhoto.id}`;
         }
       }
     }

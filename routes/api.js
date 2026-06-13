@@ -63,7 +63,14 @@ router.get("/my-gallery", checkClientAuth, async (req, res) => {
     try {
         const { slug } = req.query;
         const { clientData, supabase, drive } = req;
+        console.log(`[DEBUG] /api/my-gallery requested for slug: "${slug}" with clientId: "${clientData?.clientId}"`);
+        
         if (!slug) return res.status(400).json({ error: "Gallery slug is required." });
+
+        if (!drive) {
+            console.error("❌ Drive client is not initialized. Verify service credentials.");
+            return res.status(500).json({ error: "Google Drive service is not configured on the server." });
+        }
 
         // 1. Fetch client and gallery details
         const { data: clientUser, error: clientErr } = await supabase
@@ -72,13 +79,22 @@ router.get("/my-gallery", checkClientAuth, async (req, res) => {
             .eq("id", clientData.clientId)
             .maybeSingle();
 
+        if (clientErr) {
+            console.error("[DEBUG] Supabase client fetch error:", clientErr);
+        }
+
         const { data: gallery, error: galleryErr } = await supabase
             .from("galleries")
             .select("*")
             .eq("slug", slug)
             .maybeSingle();
 
+        if (galleryErr) {
+            console.error("[DEBUG] Supabase gallery fetch error:", galleryErr);
+        }
+
         if (clientErr || galleryErr || !clientUser || !gallery) {
+            console.warn(`[DEBUG] Gallery not found or access denied. clientUser found: ${!!clientUser}, gallery found: ${!!gallery}`);
             return res.status(404).json({ error: "Gallery not found or access denied." });
         }
 
@@ -90,17 +106,25 @@ router.get("/my-gallery", checkClientAuth, async (req, res) => {
             .eq("gallery_id", gallery.id)
             .maybeSingle();
 
+        if (relationErr) {
+            console.error("[DEBUG] Supabase relation fetch error:", relationErr);
+        }
+
         if (relationErr || !cgRelation) {
+            console.warn(`[DEBUG] Client "${clientUser.name}" does not have relation to gallery "${gallery.name}"`);
             return res.status(403).json({ error: "Access denied to this gallery." });
         }
 
         // 3. Query Google Drive files
+        console.log(`[DEBUG] Querying Google Drive files in folder ID: "${gallery.folder_id}"`);
         const response = await drive.files.list({
             q: `'${gallery.folder_id}' in parents and mimeType contains 'image/' and trashed=false`,
             fields: "files(id, name, imageMediaMetadata)",
             pageSize: 1000,
             orderBy: "name",
         });
+
+        console.log(`[DEBUG] Drive API response status: ${response.status}. Files returned: ${response.data?.files?.length || 0}`);
 
         if (!response.data.files) return res.json({ photos: [], totalPages: 0 });
 
@@ -124,7 +148,7 @@ router.get("/my-gallery", checkClientAuth, async (req, res) => {
             return {
                 id: file.id,
                 name: file.name,
-                url: `https://drive.google.com/thumbnail?id=${file.id}&sz=w400`,
+                url: `https://drive.google.com/uc?export=download&id=${file.id}`,
                 width,
                 height
             };
@@ -137,8 +161,16 @@ router.get("/my-gallery", checkClientAuth, async (req, res) => {
             selectionLimit: gallery.selection_limit
         });
     } catch (error) {
-        console.error("Fetch gallery error:", error);
-        res.status(500).json({ error: "Failed to fetch photos." });
+        console.error("Fetch gallery error detail:", {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            response: error.response ? {
+                status: error.response.status,
+                data: error.response.data
+            } : null
+        });
+        res.status(500).json({ error: "Failed to fetch photos.", details: error.message });
     }
 });
 
