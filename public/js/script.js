@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentLightboxIndex = -1;
   let currentPage = 1;
   let totalPages = 1;
+  let totalPhotos = 0;
   let isLoading = false;
   let selectionLimit = null;
 
@@ -178,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok) throw new Error("Failed to fetch gallery data.");
       const data = await res.json();
       totalPages = data.totalPages;
+      totalPhotos = data.totalPhotos || 0;
       if (data.selectionLimit) {
         selectionLimit = parseInt(data.selectionLimit) || null;
       }
@@ -430,6 +432,16 @@ document.addEventListener("DOMContentLoaded", () => {
         lightboxImg.style.opacity = "1";
       };
       lightboxImg.src = photo.url ? photo.url.replace('&sz=w1000', '&sz=w2000') : `https://drive.google.com/thumbnail?id=${photo.id}&sz=w2000`;
+      
+      const filenameEl = document.getElementById("lightbox-filename");
+      if (filenameEl) {
+        filenameEl.textContent = photo.name || "Photo";
+      }
+      
+      const counterEl = document.getElementById("lightbox-counter");
+      if (counterEl) {
+        counterEl.textContent = `${currentLightboxIndex + 1} / ${totalPhotos || allPhotos.length}`;
+      }
 
       // Pre-fetch adjacent images for seamless slideshow UX
       if (allPhotos.length > 1) {
@@ -451,7 +463,26 @@ document.addEventListener("DOMContentLoaded", () => {
     updateSelectionUI();
   };
 
-  const showNextImage = () => {
+  const showNextImage = async () => {
+    // Proactively pre-fetch next page in background if near the end of loaded list
+    if (currentLightboxIndex >= allPhotos.length - 5 && allPhotos.length < totalPhotos && !isLoading) {
+      fetchPhotos();
+    }
+
+    if (currentLightboxIndex === allPhotos.length - 1) {
+      if (allPhotos.length < totalPhotos) {
+        if (isLoading) {
+          setTimeout(showNextImage, 200);
+          return;
+        }
+        await fetchPhotos();
+      } else {
+        currentLightboxIndex = 0;
+        updateLightboxImage();
+        return;
+      }
+    }
+
     currentLightboxIndex = (currentLightboxIndex + 1) % allPhotos.length;
     updateLightboxImage();
   };
